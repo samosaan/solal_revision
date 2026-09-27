@@ -179,7 +179,9 @@
   };
 
   /* ---------- Piste de traçage ---------- */
-  const TOL = 12;     // distance acceptée autour du chemin, sur 100
+  const TOL = 12;     // distance acceptée autour du chemin, sur 100 (plus large que ce qui est dessiné)
+  const PISTE = 8;    // largeur de la piste dessinée
+  const ENCRE = 1.6;  // épaisseur du trait de Solal
   const PAS = 5;      // écart entre deux points de passage
 
   function reechantillonner(pts, pas) {
@@ -254,14 +256,14 @@
         const fait = i < piste.trait;
         if (pts.length === 1) {
           ctx.beginPath();
-          ctx.arc(pts[0][0] * k, pts[0][1] * k, TOL * 0.7 * k, 0, 2 * Math.PI);
+          ctx.arc(pts[0][0] * k, pts[0][1] * k, PISTE * 0.6 * k, 0, 2 * Math.PI);
           ctx.fillStyle = fait ? '#BFE3CC' : '#F3E6C8';
           ctx.fill();
           return;
         }
         chemin(pts);
         ctx.strokeStyle = fait ? '#BFE3CC' : '#F3E6C8';
-        ctx.lineWidth = TOL * 1.5 * k;
+        ctx.lineWidth = PISTE * k;
         ctx.setLineDash([]);
         ctx.stroke();
         if (i === piste.trait && piste.cp > 1) {
@@ -281,7 +283,7 @@
 
       // Ce que Solal a tracé
       ctx.strokeStyle = '#2F7FA3';
-      ctx.lineWidth = 2.6 * k;
+      ctx.lineWidth = ENCRE * k;
       piste.encre.forEach(seg => { if (seg.length > 1) { chemin(seg); ctx.stroke(); } });
 
       if (piste.fini) return;
@@ -303,7 +305,7 @@
           ctx.fill();
         }
         ctx.beginPath();
-        ctx.arc(x0 * k, y0 * k, 6 * k, 0, 2 * Math.PI);
+        ctx.arc(x0 * k, y0 * k, 4.5 * k, 0, 2 * Math.PI);
         ctx.fillStyle = '#3E9E68';
         ctx.fill();
         ctx.lineWidth = 3;
@@ -312,7 +314,7 @@
       } else if (piste.cp < pts.length) {
         const [x, y] = pts[piste.cp];
         ctx.beginPath();
-        ctx.arc(x * k, y * k, 3.5 * k, 0, 2 * Math.PI);
+        ctx.arc(x * k, y * k, 2.6 * k, 0, 2 * Math.PI);
         ctx.fillStyle = '#F2B544';
         ctx.fill();
       }
