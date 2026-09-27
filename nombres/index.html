@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Île aux nombres">
+<style>*{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}</style>
+<title>L'île aux nombres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<style>
+  :root {
+    --lagon: #E4F1EF;
+    --lagon-fonce: #CFE5E1;
+    --sable: #FBF1DC;
+    --sable-bord: #E8D6B0;
+    --encre: #1E3553;
+    --encre-douce: #5A6F86;
+    --mer: #2F7FA3;
+    --mer-fonce: #22617E;
+    --corail: #EE7B5B;
+    --or: #F2B544;
+    --algue: #3E9E68;
+    --galet: #B9C3CC;
+    --blanc: #FFFDF8;
+    --police: "Andika", "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--lagon);
+    color: var(--encre);
+    font-family: var(--police);
+    font-size: 20px;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+  }
+  button {
+    font-family: inherit;
+    color: inherit;
+    border: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:focus-visible { outline: 4px solid var(--or); outline-offset: 3px; }
+
+  .ecran {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-inline: max(16px, env(safe-area-inset-left, 0px));
+    padding-block: 12px;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+
+  /* ---------- Étoiles ---------- */
+  .compteur {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 700;
+    font-size: 26px;
+    font-variant-numeric: tabular-nums;
+  }
+  .compteur .bloc { display: flex; align-items: center; gap: 6px; }
+  .etoile-svg { width: 38px; height: 38px; flex: none; }
+  .joker {
+    display: inline-grid;
+    place-items: center;
+    width: 34px; height: 44px;
+    border-radius: 6px;
+    background: var(--blanc);
+    border: 3px solid var(--mer);
+    color: var(--mer);
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  /* ---------- Accueil ---------- */
+  #accueil { align-items: center; justify-content: center; gap: 24px; }
+  .accueil-haut {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(100%, 980px);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .titre {
+    margin: 0;
+    font-size: clamp(34px, 6vh, 54px);
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .titre small {
+    display: block;
+    font-size: 0.42em;
+    font-weight: 400;
+    color: var(--encre-douce);
+    letter-spacing: 0.04em;
+  }
+  .tuiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    width: min(100%, 980px);
+  }
+  .tuile {
+    background: var(--sable);
+    border: 3px solid var(--sable-bord);
+    border-radius: 26px;
+    padding: 18px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+    font-weight: 700;
+    box-shadow: 0 6px 0 var(--sable-bord);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .tuile:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--sable-bord); }
+  .tuile .dessin {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-width: 100%;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: var(--blanc);
+  }
+  .tuile .niveau { font-size: 16px; font-weight: 400; color: var(--encre-douce); }
+  .mini-de { display: grid; grid-template-columns: repeat(3, 18px); gap: 8px; }
+  .mini-de i { width: 18px; height: 18px; border-radius: 50%; background: var(--mer); }
+  .mini-de i.vide { background: transparent; }
+  .mini-cadre { display: grid; grid-template-columns: repeat(5, 22px); gap: 4px; }
+  .mini-cadre i { width: 22px; height: 22px; border: 2px solid var(--encre-douce); border-radius: 5px; display: grid; place-items: center; }
+  .mini-cadre i::after { content: ""; width: 14px; height: 14px; border-radius: 50%; }
+  .mini-cadre i.plein::after { background: var(--corail); }
+  .gros-emoji { font-size: 58px; line-height: 1; }
+
+  .coin-parent {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    font-size: 14px;
+    color: var(--encre-douce);
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 2px dashed var(--galet);
+  }
+  .coin-parent.charge { background: var(--lagon-fonce); }
+
+  /* ---------- Jeu ---------- */
+  .barre {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: none;
+  }
+  .rond {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--blanc);
+    border: 3px solid var(--lagon-fonce);
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+  .rond svg { width: 34px; height: 34px; }
+  .rond.ecoute { background: var(--mer); border-color: var(--mer-fonce); color: var(--blanc); }
+  .progres { display: flex; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
+  .progres i {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--blanc);
+    border: 2px solid var(--galet);
+  }
+  .progres i.fait { background: var(--algue); border-color: var(--algue); }
+  .progres i.encours { border-color: var(--mer); border-width: 3px; }
+
+  .scene {
+    flex: 1;
+    min-height: 0;
+    background: var(--sable);
+    border: 3px solid var(--sable-bord);
+    border-radius: 30px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    overflow: hidden;
+    padding: 16px;
+  }
+  .reponses {
+    flex: none;
+    display: flex;
+    justify-content: center;
+    gap: clamp(16px, 4vw, 48px);
+    min-height: clamp(96px, 20vh, 150px);
+    align-items: center;
+  }
+  .rep {
+    width: clamp(96px, 17vw, 170px);
+    height: clamp(90px, 18vh, 140px);
+    border-radius: 28px;
+    background: var(--blanc);
+    border: 4px solid var(--mer);
+    box-shadow: 0 7px 0 var(--mer-fonce);
+    font-size: clamp(54px, 11vh, 96px);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: transform .1s ease, box-shadow .1s ease, background .2s ease;
+  }
+  .rep:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--mer-fonce); }
+  .rep.juste { background: var(--algue); border-color: var(--algue); color: var(--blanc); box-shadow: 0 7px 0 #2D7A4F; animation: hop .45s ease; }
+  .rep.faux { background: var(--lagon-fonce); border-color: var(--galet); color: var(--encre-douce); box-shadow: 0 3px 0 var(--galet); animation: non .4s ease; }
+  .rep.indice { animation: indice 1.1s ease-in-out infinite; }
+  .rep.large { width: auto; padding-inline: 32px; font-size: clamp(30px, 6vh, 44px); }
+  .rep.valider { background: var(--algue); border-color: #2D7A4F; color: var(--blanc); box-shadow: 0 7px 0 #2D7A4F; }
+  .rep.enlever { border-color: var(--encre-douce); box-shadow: 0 7px 0 var(--galet); }
+
+  /* Dés et cadre de dix */
+  .carte-points {
+    background: var(--blanc);
+    border-radius: 26px;
+    padding: clamp(18px, 3vh, 30px);
+    box-shadow: 0 4px 0 var(--sable-bord);
+  }
+  .de { display: grid; grid-template-columns: repeat(3, var(--p)); gap: calc(var(--p) * 0.45); --p: clamp(40px, 9vh, 76px); }
+  .cadre { display: grid; grid-template-columns: repeat(5, var(--c)); gap: 8px; --c: clamp(56px, 11vh, 92px); }
+  .case {
+    width: var(--c); height: var(--c);
+    border: 4px solid var(--encre-douce);
+    border-radius: 12px;
+    display: grid; place-items: center;
+    background: var(--blanc);
+  }
+  .point {
+    width: var(--p, 60px); height: var(--p, 60px);
+    border-radius: 50%;
+    background: var(--mer);
+    transition: transform .2s ease, background .2s ease;
+  }
+  .cadre .point { --p: calc(var(--c) * 0.68); background: var(--corail); }
+  .point.vide { background: transparent; }
+  .point.compte { background: var(--or); transform: scale(1.18); }
+  .cadre-cliquable { cursor: pointer; }
+
+  /* Compter en touchant */
+  .bestiole {
+    position: absolute;
+    width: clamp(70px, 12vh, 104px);
+    height: clamp(70px, 12vh, 104px);
+    font-size: clamp(50px, 9vh, 78px);
+    line-height: 1;
+    background: transparent;
+    display: grid; place-items: center;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+  }
+  .bestiole.touche { background: rgba(242, 181, 68, 0.35); }
+  .bestiole .num {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--encre);
+    color: var(--blanc);
+    font-size: 24px;
+    font-weight: 700;
+    display: grid; place-items: center;
+    font-family: var(--police);
+  }
+
+  .grand-nombre {
+    font-size: clamp(120px, 34vh, 260px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--encre);
+    font-variant-numeric: tabular-nums;
+  }
+  .oreille {
+    width: clamp(150px, 32vh, 240px);
+    height: clamp(150px, 32vh, 240px);
+    border-radius: 50%;
+    background: var(--mer);
+    color: var(--blanc);
+    display: grid; place-items: center;
+    box-shadow: 0 8px 0 var(--mer-fonce);
+  }
+  .oreille svg { width: 50%; height: 50%; }
+
+  /* ---------- Fin ---------- */
+  #fin { align-items: center; justify-content: center; gap: 22px; text-align: center; }
+  .rangee-etoiles { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; min-height: 64px; }
+  .rangee-etoiles .etoile-svg { width: 60px; height: 60px; animation: hop .5s ease both; }
+  .actions { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+
+  /* ---------- Parent ---------- */
+  #parent { overflow-y: auto; gap: 18px; font-size: 17px; }
+  #parent h2 { margin: 0; font-size: 28px; }
+  #parent p { margin: 0; max-width: 70ch; line-height: 1.5; color: var(--encre-douce); }
+  .table-zone { overflow-x: auto; }
+  table { border-collapse: separate; border-spacing: 4px; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 700; padding: 4px 10px 4px 0; white-space: nowrap; }
+  th.n { text-align: center; padding: 4px; }
+  td.c {
+    width: 54px; height: 44px; text-align: center;
+    border-radius: 8px; font-size: 14px;
+    background: var(--blanc); color: var(--encre-douce);
+  }
+  td.vert { background: #CDEBD8; color: #1F5E3A; }
+  td.orange { background: #FBE3BE; color: #7A4B0C; }
+  td.rouge { background: #F6D0C6; color: #7E2A16; }
+  .legende { display: flex; gap: 16px; flex-wrap: wrap; font-size: 15px; color: var(--encre-douce); }
+  .legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .legende i { width: 18px; height: 18px; border-radius: 4px; display: inline-block; }
+  .btn-texte {
+    background: var(--blanc);
+    border: 3px solid var(--galet);
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .btn-texte.danger { border-color: var(--corail); color: #A2412A; }
+
+  @keyframes hop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+  @keyframes non { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+  @keyframes indice { 0%,100% { box-shadow: 0 7px 0 var(--mer-fonce), 0 0 0 0 rgba(242,181,68,.0); } 50% { box-shadow: 0 7px 0 var(--mer-fonce), 0 0 0 12px rgba(242,181,68,.7); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 760px) {
+    .tuiles { grid-template-columns: repeat(2, 1fr); }
+    body { overflow: auto; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-etoile" viewBox="0 0 100 100">
+      <path d="M50 6 C55 6 58 30 62 36 C66 42 92 40 94 45 C96 50 74 62 72 69 C70 76 82 95 78 98 C74 101 56 84 50 84 C44 84 26 101 22 98 C18 95 30 76 28 69 C26 62 4 50 6 45 C8 40 34 42 38 36 C42 30 45 6 50 6 Z" fill="#EE7B5B" stroke="#C85D40" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="50" cy="52" r="3.5" fill="#FBF1DC"/><circle cx="50" cy="30" r="2.5" fill="#FBF1DC"/><circle cx="72" cy="48" r="2.5" fill="#FBF1DC"/><circle cx="28" cy="48" r="2.5" fill="#FBF1DC"/><circle cx="63" cy="74" r="2.5" fill="#FBF1DC"/><circle cx="37" cy="74" r="2.5" fill="#FBF1DC"/>
+    </symbol>
+    <symbol id="i-maison" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v9.5h5v-5h3v5h5V10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-son" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="ecran">
+  <div class="accueil-haut">
+    <h1 class="titre">L'île aux nombres <small>Les nombres de 1 à 10</small></h1>
+    <div class="compteur" aria-label="Étoiles et jokers">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="tuiles">
+    <button class="tuile" data-jeu="combien">
+      <span class="dessin"><span class="mini-de"><i></i><i class="vide"></i><i></i><i class="vide"></i><i></i><i class="vide"></i><i></i><i class="vide"></i><i></i></span></span>
+      Combien ?
+      <span class="niveau" data-niveau="combien"></span>
+    </button>
+    <button class="tuile" data-jeu="touche">
+      <span class="dessin"><span class="gros-emoji">🐟</span></span>
+      Je compte
+      <span class="niveau" data-niveau="touche"></span>
+    </button>
+    <button class="tuile" data-jeu="ecoute">
+      <span class="dessin"><span class="rond ecoute" style="width:84px;height:84px"><svg style="width:46px;height:46px"><use href="#i-son"/></svg></span></span>
+      J'écoute
+      <span class="niveau" data-niveau="ecoute"></span>
+    </button>
+    <button class="tuile" data-jeu="remplis">
+      <span class="dessin"><span class="mini-cadre"><i class="plein"></i><i class="plein"></i><i class="plein"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+      La boîte
+      <span class="niveau" data-niveau="remplis"></span>
+    </button>
+  </div>
+  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour à l'accueil"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN DE SÉANCE ============ -->
+<section id="fin" class="ecran" hidden>
+  <h1 class="titre">Bravo Solal !</h1>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p id="fin-texte" style="margin:0;font-size:24px;color:var(--encre-douce)"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Encore</button>
+    <button class="rep large enlever" id="btn-accueil">Accueil</button>
+  </div>
+</section>
+
+<!-- ============ ESPACE PARENT ============ -->
+<section id="parent" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour à l'accueil"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent</h2>
+  </div>
+  <p>Réussite au <strong>premier essai</strong>, nombre par nombre. Les données restent sur cette tablette. Comparer les lignes est souvent parlant : un nombre réussi dans « J'écoute » mais raté dans « Combien ? » veut dire que Solal reconnaît le chiffre écrit sans encore voir la quantité.</p>
+  <div class="legende">
+    <span><i style="background:#CDEBD8"></i>80 % et plus</span>
+    <span><i style="background:#FBE3BE"></i>50 à 79 %</span>
+    <span><i style="background:#F6D0C6"></i>moins de 50 %</span>
+    <span><i style="background:var(--blanc)"></i>pas encore vu</span>
+  </div>
+  <div class="table-zone"><table id="table-stats"></table></div>
+  <p>Chaque jeu monte seul d'un palier (jusqu'à 5, puis 7, puis 10) après 5 bonnes réponses d'affilée, et redescend après 2 erreurs d'affilée. Une séance dure 8 questions, soit 5 minutes environ. 10 étoiles donnent 1 joker, comme en classe : à vous de décider ce qu'il permet.</p>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte danger" id="btn-reset">Tout remettre à zéro</button>
+  </div>
+</section>
+
+<script>
+(() => {
+  const MOTS = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix'];
+  const PALIERS = [5, 7, 10];
+  const PAR_SEANCE = 8;
+  const CLE = 'solal-nombres-v1';
+  const NOMS_JEUX = { combien: 'Combien ?', touche: 'Je compte', ecoute: "J'écoute", remplis: 'La boîte' };
+  const BRAVOS = ['Bravo !', 'Super !', 'Génial !', 'Bien joué !', 'Oui, bravo !'];
+  const BESTIOLES = [
+    { e: '🐟', nom: 'poisson' }, { e: '🐠', nom: 'poisson' }, { e: '🦀', nom: 'crabe' },
+    { e: '🐙', nom: 'pieuvre', f: true }, { e: '🐢', nom: 'tortue', f: true }, { e: '🐚', nom: 'coquillage' }
+  ];
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const hasard = n => Math.floor(Math.random() * n);
+  const melanger = a => { for (let i = a.length - 1; i > 0; i--) { const j = hasard(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const pause = ms => new Promise(r => setTimeout(r, ms));
+  const pluriel = (n, mot) => `${MOTS[n]} ${mot}${n > 1 ? 's' : ''}`;
+
+  /* ---------- Sauvegarde ---------- */
+  function etatVide() {
+    const parJeu = v => ({ combien: v(), touche: v(), ecoute: v(), remplis: v() });
+    return { etoiles: 0, jokers: 0, paliers: parJeu(() => 0), serie: parJeu(() => 0), ratees: parJeu(() => 0), stats: parJeu(() => ({})) };
+  }
+  function charger() {
+    try {
+      const brut = localStorage.getItem(CLE);
+      if (brut) return Object.assign(etatVide(), JSON.parse(brut));
+    } catch (e) {}
+    return etatVide();
+  }
+  function sauver() { try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch (e) {} }
+  let etat = charger();
+
+  /* ---------- Voix ---------- */
+  let voix = null;
+  function choisirVoix() {
+    if (!('speechSynthesis' in window)) return;
+    const fr = speechSynthesis.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+    voix = fr.find(v => /fr[-_]fr/i.test(v.lang) && /amélie|amelie|thomas|audrey|marie|google/i.test(v.name))
+        || fr.find(v => /fr[-_]fr/i.test(v.lang)) || fr[0] || null;
+  }
+  if ('speechSynthesis' in window) { choisirVoix(); speechSynthesis.onvoiceschanged = choisirVoix; }
+  function dire(texte) {
+    return new Promise(fin => {
+      if (!('speechSynthesis' in window)) { setTimeout(fin, 400 + texte.length * 40); return; }
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texte);
+      u.lang = 'fr-FR';
+      if (voix) u.voice = voix;
+      u.rate = 0.85;
+      u.pitch = 1.05;
+      let fait = false;
+      const finir = () => { if (!fait) { fait = true; fin(); } };
+      u.onend = finir;
+      u.onerror = finir;
+      setTimeout(finir, 900 + texte.length * 120);
+      speechSynthesis.speak(u);
+    });
+  }
+
+  /* ---------- Écrans ---------- */
+  function montrer(id) {
+    $$('.ecran').forEach(s => { s.hidden = s.id !== id; });
+    majCompteurs();
+  }
+  function majCompteurs() {
+    $$('.js-etoiles').forEach(el => { el.textContent = etat.etoiles; });
+    $$('.js-jokers').forEach(el => { el.textContent = etat.jokers; });
+    $$('[data-niveau]').forEach(el => { el.textContent = `jusqu'à ${PALIERS[etat.paliers[el.dataset.niveau]]}`; });
+  }
+
+  /* ---------- Déroulé d'une séance ---------- */
+  let jeu = null;
+  let occupe = false;
+
+  function lancer(id) {
+    jeu = { id, num: 0, gagnees: 0, dernier: 0 };
+    montrer('jeu');
+    questionSuivante();
+  }
+
+  function majProgres() {
+    $('#progres').innerHTML = Array.from({ length: PAR_SEANCE }, (_, i) =>
+      `<i class="${i < jeu.num - 1 ? 'fait' : i === jeu.num - 1 ? 'encours' : ''}"></i>`).join('');
+  }
+
+  function questionSuivante() {
+    if (jeu.num >= PAR_SEANCE) { finSeance(); return; }
+    jeu.num++;
+    majProgres();
+    const max = PALIERS[etat.paliers[jeu.id]];
+    let n;
+    do { n = 1 + hasard(max); } while (n === jeu.dernier);
+    jeu.dernier = n;
+    jeu.cible = n;
+    jeu.essais = 0;
+    jeu.max = max;
+    $('#scene').innerHTML = '';
+    $('#reponses').innerHTML = '';
+    JEUX[jeu.id].preparer(n, max);
+  }
+
+  function consigne(texte) {
+    jeu.consigne = texte;
+    occupe = true;
+    return dire(texte).then(() => { occupe = false; });
+  }
+
+  function choix(n, max) {
+    const autres = melanger(Array.from({ length: max }, (_, i) => i + 1).filter(v => v !== n));
+    const proches = autres.filter(v => Math.abs(v - n) <= 3);
+    const pris = (proches.length >= 2 ? proches : autres).slice(0, 2);
+    return [n, ...pris].sort((a, b) => a - b);
+  }
+
+  function boutonsReponse(n, max) {
+    $('#reponses').innerHTML = choix(n, max).map(v => `<button class="rep" data-v="${v}">${v}</button>`).join('');
+    $$('#reponses .rep').forEach(b => b.addEventListener('click', () => repondre(+b.dataset.v, b)));
+  }
+
+  function noterStat(juste) {
+    const s = etat.stats[jeu.id];
+    const cle = String(jeu.cible);
+    if (!s[cle]) s[cle] = [0, 0];
+    s[cle][1]++;
+    if (juste) s[cle][0]++;
+  }
+
+  async function gagnerEtoile() {
+    jeu.gagnees++;
+    etat.etoiles++;
+    let joker = false;
+    if (etat.etoiles >= 10) { etat.etoiles = 0; etat.jokers++; joker = true; }
+    majCompteurs();
+    return joker;
+  }
+
+  async function bonneReponse(phrase) {
+    const premier = jeu.essais === 1;
+    let texte = phrase;
+    if (premier) {
+      noterStat(true);
+      const joker = await gagnerEtoile();
+      etat.serie[jeu.id]++;
+      etat.ratees[jeu.id] = 0;
+      if (joker) texte += ' Tu as gagné un joker !';
+      if (etat.serie[jeu.id] >= 5 && etat.paliers[jeu.id] < PALIERS.length - 1) {
+        etat.paliers[jeu.id]++;
+        etat.serie[jeu.id] = 0;
+        texte += ` Tu es fort ! Maintenant, on va jusqu'à ${MOTS[PALIERS[etat.paliers[jeu.id]]]}.`;
+      }
+    }
+    sauver();
+    await dire(texte);
+    await pause(350);
+    occupe = false;
+    questionSuivante();
+  }
+
+  function mauvaiseReponse() {
+    if (jeu.essais === 1) {
+      noterStat(false);
+      etat.serie[jeu.id] = 0;
+      etat.ratees[jeu.id]++;
+      if (etat.ratees[jeu.id] >= 2 && etat.paliers[jeu.id] > 0) {
+        etat.paliers[jeu.id]--;
+        etat.ratees[jeu.id] = 0;
+      }
+      sauver();
+    }
+  }
+
+  async function repondre(v, bouton) {
+    if (occupe || bouton.classList.contains('faux')) return;
+    occupe = true;
+    jeu.essais++;
+    await dire(MOTS[v]);
+    if (v === jeu.cible) {
+      $$('#reponses .rep').forEach(b => b.classList.remove('indice'));
+      bouton.classList.add('juste');
+      await bonneReponse(JEUX[jeu.id].bravo(jeu.cible));
+    } else {
+      bouton.classList.add('faux');
+      mauvaiseReponse();
+      await JEUX[jeu.id].aider(v);
+      occupe = false;
+    }
+  }
+
+  function indice() {
+    const b = $(`#reponses .rep[data-v="${jeu.cible}"]`);
+    if (b) b.classList.add('indice');
+  }
+
+  function finSeance() {
+    montrer('fin');
+    const n = jeu.gagnees;
+    $('#fin-etoiles').innerHTML = Array.from({ length: n }, (_, i) =>
+      `<svg class="etoile-svg" style="animation-delay:${i * 0.12}s"><use href="#i-etoile"/></svg>`).join('');
+    const texte = n === 0 ? 'Tu as bien travaillé. Tu peux faire une pause.'
+      : `Tu as gagné ${pluriel(n, 'étoile')}. Tu peux faire une pause.`;
+    $('#fin-texte').textContent = n === 0 ? 'Tu as bien travaillé.' : `${n} étoile${n > 1 ? 's' : ''} gagnée${n > 1 ? 's' : ''}`;
+    dire('Bravo Solal ! ' + texte);
+  }
+
+  /* ---------- Dessins ---------- */
+  const DE = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  function htmlDe(n) {
+    return `<div class="de">${Array.from({ length: 9 }, (_, i) =>
+      `<span class="point${DE[n].includes(i) ? ' js-p' : ' vide'}"></span>`).join('')}</div>`;
+  }
+  function htmlCadre(n) {
+    return `<div class="cadre">${Array.from({ length: 10 }, (_, i) =>
+      `<span class="case">${i < n ? '<span class="point js-p"></span>' : ''}</span>`).join('')}</div>`;
+  }
+  async function compterPoints(points) {
+    for (let i = 0; i < points.length; i++) {
+      points[i].classList.add('compte');
+      await dire(MOTS[i + 1]);
+      await pause(120);
+    }
+  }
+
+  /* ---------- Les quatre jeux ---------- */
+  const JEUX = {
+    combien: {
+      preparer(n, max) {
+        const de = n <= 6 && Math.random() < 0.5;
+        $('#scene').innerHTML = `<div class="carte-points">${de ? htmlDe(n) : htmlCadre(n)}</div>`;
+        boutonsReponse(n, max);
+        consigne('Combien de points ?');
+      },
+      bravo: n => `${BRAVOS[hasard(BRAVOS.length)]} Il y a ${pluriel(n, 'point')}.`,
+      async aider() {
+        await dire('Comptons ensemble.');
+        const points = $$('#scene .js-p');
+        points.forEach(p => p.classList.remove('compte'));
+        await compterPoints(points);
+        await dire(`Il y a ${pluriel(jeu.cible, 'point')}.`);
+        indice();
+      }
+    },
+
+    touche: {
+      preparer(n) {
+        const b = BESTIOLES[hasard(BESTIOLES.length)];
+        jeu.bestiole = b;
+        jeu.compte = 0;
+        const cols = 6, lignes = 3;
+        const cases = melanger(Array.from({ length: cols * lignes }, (_, i) => i)).slice(0, n);
+        const scene = $('#scene');
+        scene.innerHTML = cases.map(c => {
+          const x = ((c % cols) + 0.5) / cols * 100 + (Math.random() * 6 - 3);
+          const y = (Math.floor(c / cols) + 0.5) / lignes * 100 + (Math.random() * 8 - 4);
+          return `<button class="bestiole" style="left:${x}%;top:${y}%" aria-label="${b.nom}">${b.e}</button>`;
+        }).join('');
+        $$('.bestiole', scene).forEach(el => el.addEventListener('click', () => this.toucher(el)));
+        consigne(`Touche chaque ${b.nom} pour ${b.f ? 'la' : 'le'} compter.`);
+      },
+      async toucher(el) {
+        if (occupe || el.classList.contains('touche')) return;
+        occupe = true;
+        jeu.compte++;
+        el.classList.add('touche');
+        el.insertAdjacentHTML('beforeend', `<span class="num">${jeu.compte}</span>`);
+        await dire(MOTS[jeu.compte]);
+        if (jeu.compte === jeu.cible) {
+          boutonsReponse(jeu.cible, jeu.max);
+          jeu.consigne = 'Il y en a combien ?';
+          await dire(jeu.consigne);
+        }
+        occupe = false;
+      },
+      bravo: n => `${BRAVOS[hasard(BRAVOS.length)]} Il y en a ${MOTS[n]}.`,
+      async aider() {
+        await dire(`Regarde : le dernier que tu as touché, c'est le ${MOTS[jeu.cible]}. Il y en a ${MOTS[jeu.cible]}.`);
+        indice();
+      }
+    },
+
+    ecoute: {
+      preparer(n, max) {
+        $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
+        $('#scene .oreille').addEventListener('click', () => { if (!occupe) consigne(jeu.consigne); });
+        boutonsReponse(n, max);
+        consigne(`Trouve le ${MOTS[n]}.`);
+      },
+      bravo: n => `${BRAVOS[hasard(BRAVOS.length)]} C'est le ${MOTS[n]}.`,
+      async aider(v) {
+        await dire(`Ça, c'est le ${MOTS[v]}. Trouve le ${MOTS[jeu.cible]}.`);
+        if (jeu.essais >= 2) indice();
+      }
+    },
+
+    remplis: {
+      preparer(n) {
+        jeu.jetons = 0;
+        $('#scene').innerHTML = `<div class="grand-nombre">${n}</div>
+          <div class="carte-points cadre-cliquable" id="boite">${htmlCadre(0)}</div>`;
+        $('#boite').addEventListener('click', () => this.ajouter());
+        $('#reponses').innerHTML = `<button class="rep enlever" id="btn-enlever" aria-label="Enlever un jeton">−</button>
+          <button class="rep valider" id="btn-ok" aria-label="C'est bon">✓</button>`;
+        $('#btn-enlever').addEventListener('click', () => this.enlever());
+        $('#btn-ok').addEventListener('click', () => this.valider());
+        consigne(`Mets ${MOTS[n]} jeton${n > 1 ? 's' : ''} dans la boîte. Touche la boîte pour ajouter un jeton. Quand c'est fini, appuie sur le bouton vert.`);
+      },
+      dessiner() {
+        $$('#boite .case').forEach((c, i) => { c.innerHTML = i < jeu.jetons ? '<span class="point"></span>' : ''; });
+      },
+      async ajouter() {
+        if (occupe || jeu.jetons >= 10) return;
+        occupe = true;
+        jeu.jetons++;
+        this.dessiner();
+        await dire(MOTS[jeu.jetons]);
+        occupe = false;
+      },
+      async enlever() {
+        if (occupe || jeu.jetons === 0) return;
+        occupe = true;
+        jeu.jetons--;
+        this.dessiner();
+        await dire(MOTS[jeu.jetons]);
+        occupe = false;
+      },
+      async valider() {
+        if (occupe) return;
+        occupe = true;
+        jeu.essais++;
+        if (jeu.jetons === jeu.cible) {
+          $('#btn-ok').classList.add('juste');
+          await bonneReponse(`${BRAVOS[hasard(BRAVOS.length)]} Il y a ${pluriel(jeu.cible, 'jeton')}.`);
+        } else {
+          mauvaiseReponse();
+          const t = jeu.jetons;
+          const dit = t === 0 ? "Tu n'as pas mis de jeton." : `Tu as mis ${pluriel(t, 'jeton')}.`;
+          await dire(`${dit} Il en faut ${MOTS[jeu.cible]}. ${t > jeu.cible ? 'Enlève-en.' : 'Ajoutes-en.'}`);
+          occupe = false;
+        }
+      },
+      bravo: () => ''
+    }
+  };
+
+  /* ---------- Espace parent ---------- */
+  function afficherParent() {
+    const lignes = Object.keys(NOMS_JEUX).map(id => {
+      const s = etat.stats[id];
+      const cellules = Array.from({ length: 10 }, (_, i) => {
+        const v = s[String(i + 1)];
+        if (!v) return '<td class="c">–</td>';
+        const taux = v[0] / v[1];
+        const cls = taux >= 0.8 ? 'vert' : taux >= 0.5 ? 'orange' : 'rouge';
+        return `<td class="c ${cls}">${v[0]}/${v[1]}</td>`;
+      }).join('');
+      return `<tr><th>${NOMS_JEUX[id]}<br><span style="font-weight:400;font-size:14px;color:var(--encre-douce)">jusqu'à ${PALIERS[etat.paliers[id]]}</span></th>${cellules}</tr>`;
+    }).join('');
+    $('#table-stats').innerHTML = `<tr><th></th>${Array.from({ length: 10 }, (_, i) => `<th class="n">${i + 1}</th>`).join('')}</tr>${lignes}`;
+    $('#btn-reset').textContent = 'Tout remettre à zéro';
+    $('#btn-reset').dataset.confirme = '';
+    montrer('parent');
+  }
+
+  let minuteur = null;
+  const btnParent = $('#btn-parent');
+  const annulerAppui = () => { clearTimeout(minuteur); btnParent.classList.remove('charge'); };
+  btnParent.addEventListener('pointerdown', () => {
+    btnParent.classList.add('charge');
+    minuteur = setTimeout(() => { annulerAppui(); afficherParent(); }, 1300);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btnParent.addEventListener(ev, annulerAppui));
+  btnParent.addEventListener('contextmenu', e => e.preventDefault());
+
+  $('#btn-reset').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = 'Confirmer : tout effacer'; return; }
+    etat = etatVide();
+    sauver();
+    afficherParent();
+  });
+  $('#btn-parent-retour').addEventListener('click', () => montrer('accueil'));
+
+  /* ---------- Navigation ---------- */
+  $$('.tuile').forEach(t => t.addEventListener('click', () => lancer(t.dataset.jeu)));
+  $('#btn-maison').addEventListener('click', () => { if ('speechSynthesis' in window) speechSynthesis.cancel(); occupe = false; montrer('accueil'); });
+  $('#btn-reecouter').addEventListener('click', () => { if (!occupe && jeu && jeu.consigne) consigne(jeu.consigne); });
+  $('#btn-encore').addEventListener('click', () => lancer(jeu.id));
+  $('#btn-accueil').addEventListener('click', () => montrer('accueil'));
+
+  majCompteurs();
+})();
+</script>
+</body>
+</html>
