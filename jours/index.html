@@ -58,6 +58,10 @@
   }
   .carte-jour .jour.vide { background: var(--lagon); }
   .carte-jour .jour.mystere { background: var(--blanc); border: 4px dashed var(--galet); color: var(--encre-douce); font-size: 48px; }
+  .trois-cartes.cinq .carte-jour { width: clamp(110px, 17vw, 190px); }
+  .trois-cartes.cinq .carte-jour .jour { font-size: clamp(18px, 3.4vh, 28px); }
+  .trois-cartes.cinq .carte-jour .etiquette { font-size: clamp(15px, 2.4vh, 20px); white-space: nowrap; }
+  .trois-cartes.cinq .carte-jour .jour.mystere { font-size: 44px; }
   .carte-jour.centre { box-shadow: 0 0 0 5px var(--encre), 0 5px 0 var(--sable-bord); }
 
   .rep.jour-btn { color: var(--blanc); border: 0; font-size: clamp(26px, 5vh, 40px); min-width: clamp(150px, 22vw, 230px); }
@@ -333,14 +337,15 @@
     },
 
     semaine: {
-      paliers: 2,
-      libelle: p => p === 0 ? 'après' : 'avant et après',
-      montee: () => 'Maintenant, je vais aussi te demander le jour d\'avant !',
+      paliers: 3,
+      libelle: p => ['après', 'avant et après', 'deux jours plus loin'][p],
+      montee: p => p === 1 ? "Maintenant, je vais aussi te demander le jour d'avant !" : 'Bravo ! Maintenant, on saute deux jours !',
       async preparer(m, p) {
         const repere = choisir(SEMAINE);
-        const avant = p === 1 && Math.random() < 0.5;
-        const cible = decaler(repere, avant ? -1 : 1);
-        m.jeu.cle = avant ? 'avant' : 'après';
+        const genre = p === 0 ? 'après' : p === 1 ? choisir(['après', 'avant']) : choisir(['après', 'avant', 'deux jours après']);
+        const ecart = genre === 'avant' ? -1 : genre === 'après' ? 1 : 2;
+        const cible = decaler(repere, ecart);
+        m.jeu.cle = genre;
         $('#scene').innerHTML = `<div class="train">${SEMAINE.map(j =>
           `<div class="wagon" data-j="${j}" style="background:${COULEUR[j]}">${j}</div>`).join('')}</div>`;
         if (m.jeu.num === 1) {
@@ -355,48 +360,66 @@
           m.occupe = false;
         }
         $(`.wagon[data-j="${repere}"]`).classList.add('repere');
+        // Au dernier palier, les noms des wagons disparaissent : il faut connaître la comptine.
+        if (p === 2) $$('.wagon').forEach(w => { if (w.dataset.j !== repere) w.textContent = ''; });
         const w = $(`.wagon[data-j="${cible}"]`);
         w.classList.add('mystere');
         w.textContent = '?';
-        choixJours(m, optionsJours(cible, [decaler(repere, avant ? 1 : -1)]), cible,
-          async () => { await dire(avant ? `Avant ${repere}, il y a ${cible}.` : `Après ${repere}, il y a ${cible}.`); },
-          () => `${choisir(Solal.BRAVOS)} ${avant ? `Avant ${repere}, c'est ${cible}.` : `Après ${repere}, c'est ${cible}.`}`);
-        m.consigne(avant ? `Quel jour vient avant ${repere} ?` : `Quel jour vient après ${repere} ?`);
+        const question = genre === 'deux jours après' ? `Quel jour vient deux jours après ${repere} ?` : `Quel jour vient ${genre} ${repere} ?`;
+        const reponse = genre === 'deux jours après'
+          ? `Deux jours après ${repere}, c'est ${cible}. ${repere}, ${decaler(repere, 1)}, ${cible}.`
+          : `${genre === 'avant' ? 'Avant' : 'Après'} ${repere}, c'est ${cible}.`;
+        choixJours(m, optionsJours(cible, [decaler(repere, ecart === 2 ? 1 : -ecart), decaler(repere, ecart === 2 ? 3 : 0)]), cible,
+          async () => { await dire(reponse); },
+          () => `${choisir(Solal.BRAVOS)} ${reponse}`);
+        m.consigne(question);
       }
     },
 
     hier: {
-      paliers: 1,
-      preparer(m) {
+      paliers: 2,
+      libelle: p => p === 0 ? 'hier, demain' : 'avant-hier, après-demain',
+      montee: () => 'Bravo ! Maintenant, on va plus loin : avant-hier et après-demain !',
+      preparer(m, p) {
         const vrai = auj();
         const num = m.jeu.num;
+        const REL = {
+          avanthier: { d: -2, et: 'avant-hier', verbe: "c'était" },
+          hier: { d: -1, et: 'hier', verbe: "c'était" },
+          aujourdhui: { d: 0, et: "aujourd'hui", verbe: "c'est" },
+          demain: { d: 1, et: 'demain', verbe: 'ce sera' },
+          apresdemain: { d: 2, et: 'après-demain', verbe: 'ce sera' }
+        };
+        const cartes = p === 0 ? ['hier', 'aujourdhui', 'demain'] : ['avanthier', 'hier', 'aujourdhui', 'demain', 'apresdemain'];
         let centre, question;
-        if (num <= 3) {
+        const vraiJour = num <= 3;
+        if (vraiJour) {
           centre = jourSemaine(vrai);
-          question = ['aujourdhui', 'hier', 'demain'][num - 1];
+          question = (p === 0 ? ['aujourdhui', 'hier', 'demain'] : ['aujourdhui', 'avanthier', 'apresdemain'])[num - 1];
         } else {
           centre = choisir(SEMAINE);
-          question = choisir(['hier', 'demain']);
+          question = choisir(p === 0 ? ['hier', 'demain'] : ['avanthier', 'hier', 'demain', 'apresdemain']);
         }
-        const valeurs = { hier: decaler(centre, -1), aujourdhui: centre, demain: decaler(centre, 1) };
-        const cible = valeurs[question];
-        m.jeu.cle = question === 'aujourdhui' ? "aujourd'hui" : question;
-        const carte = (cle, etiquette) => {
-          const j = valeurs[cle];
-          const montre = question === 'aujourdhui' ? false : (cle === 'aujourdhui');
-          const contenu = cle === question ? '<div class="jour mystere">?</div>'
+        const val = k => decaler(centre, REL[k].d);
+        const cible = val(question);
+        const R = REL[question];
+        m.jeu.cle = R.et;
+        const carte = k => {
+          const j = val(k);
+          const montre = question !== 'aujourdhui' && k === 'aujourdhui';
+          const contenu = k === question ? '<div class="jour mystere">?</div>'
             : montre ? `<div class="jour" style="background:${COULEUR[j]}">${j}</div>` : '<div class="jour vide"></div>';
-          return `<div class="carte-jour ${cle === 'aujourdhui' ? 'centre' : ''}"><span class="etiquette">${etiquette}</span>${contenu}</div>`;
+          return `<div class="carte-jour ${k === 'aujourdhui' ? 'centre' : ''}"><span class="etiquette">${REL[k].et}</span>${contenu}</div>`;
         };
-        $('#scene').innerHTML = `<div class="trois-cartes">${carte('hier', 'hier')}${carte('aujourdhui', "aujourd'hui")}${carte('demain', 'demain')}</div>`;
-        const vraiJour = num <= 3;
+        $('#scene').innerHTML = `<div class="trois-cartes ${p ? 'cinq' : ''}">${cartes.map(carte).join('')}</div>`;
+        const Maj = t => t.charAt(0).toUpperCase() + t.slice(1);
         let texte;
         if (question === 'aujourdhui') texte = "Aujourd'hui, c'est quel jour ?";
-        else if (vraiJour) texte = question === 'hier' ? `Aujourd'hui, c'est ${centre}. Hier, c'était quel jour ?` : `Aujourd'hui, c'est ${centre}. Demain, ce sera quel jour ?`;
-        else texte = question === 'hier' ? `Si aujourd'hui c'est ${centre}, hier c'était quel jour ?` : `Si aujourd'hui c'est ${centre}, demain ce sera quel jour ?`;
+        else if (vraiJour) texte = `Aujourd'hui, c'est ${centre}. ${Maj(R.et)}, ${R.verbe} quel jour ?`;
+        else texte = `Si aujourd'hui c'est ${centre}, ${R.et} ${R.verbe} quel jour ?`;
         const phrase = question === 'aujourdhui' ? `Aujourd'hui, nous sommes ${dateDite(vrai)}.`
-          : question === 'hier' ? `Si aujourd'hui c'est ${centre}, hier c'était ${cible}.` : `Si aujourd'hui c'est ${centre}, demain ce sera ${cible}.`;
-        const proches = question === 'aujourdhui' ? [valeurs.demain] : [question === 'hier' ? valeurs.demain : valeurs.hier];
+          : `Si aujourd'hui c'est ${centre}, ${R.et} ${R.verbe} ${cible}.`;
+        const proches = [decaler(cible, 1), decaler(cible, -1)].filter(j => j !== cible);
         choixJours(m, optionsJours(cible, proches), cible,
           async () => { await dire(phrase); },
           () => `${choisir(Solal.BRAVOS)} ${phrase}`);
@@ -467,7 +490,7 @@
     ].join('');
     const c = centiemeJour();
     $('#jour-100').textContent = c ? `${dateEnMots(c)} ${c.getFullYear()}` : '—';
-    $('#stats').innerHTML = m.statsHTML(NOMS, { semaine: ['après', 'avant'], hier: ["aujourd'hui", 'hier', 'demain'], saisons: ['printemps', 'été', 'automne', 'hiver'] });
+    $('#stats').innerHTML = m.statsHTML(NOMS, { semaine: ['après', 'avant', 'deux jours après'], hier: ['avant-hier', 'hier', "aujourd'hui", 'demain', 'après-demain'], saisons: ['printemps', 'été', 'automne', 'hiver'] });
     const b = $('#btn-reset');
     b.textContent = 'Remettre les jeux à zéro';
     b.dataset.confirme = '';

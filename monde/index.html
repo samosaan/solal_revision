@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Le monde de Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  .grand-emoji { font-size: clamp(120px, 32vh, 220px); line-height: 1; }
+  .oreille {
+    width: clamp(150px, 32vh, 240px); height: clamp(150px, 32vh, 240px);
+    border-radius: 50%; background: var(--algue); color: var(--blanc);
+    display: grid; place-items: center; box-shadow: 0 8px 0 var(--algue-fonce);
+  }
+  .oreille svg { width: 50%; height: 50%; }
+  .rep.emoji { font-size: clamp(56px, 12vh, 96px); min-width: clamp(110px, 17vw, 160px); }
+  .rep.lieu { flex-direction: column; gap: 4px; font-size: clamp(18px, 3vh, 24px); min-width: clamp(120px, 16vw, 170px); height: clamp(100px, 20vh, 150px); }
+  .rep.lieu span { font-size: clamp(40px, 8vh, 64px); line-height: 1; }
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="ecran accueil">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">Le monde <small>Le vivant, le corps, les animaux</small></h1>
+    </div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="tuiles">
+    <button class="tuile" data-jeu="vivant">
+      <span class="dessin">🌱</span>
+      Vivant ou pas ?
+      <span class="niveau" data-niveau="vivant"></span>
+    </button>
+    <button class="tuile" data-jeu="corps">
+      <span class="dessin">👂</span>
+      Mon corps
+      <span class="niveau" data-niveau="corps"></span>
+    </button>
+    <button class="tuile" data-jeu="habitat">
+      <span class="dessin">🦊</span>
+      Où vit-il ?
+      <span class="niveau" data-niveau="habitat"></span>
+    </button>
+    <button class="tuile" data-jeu="mange">
+      <span class="dessin">🥕</span>
+      Qui mange quoi ?
+      <span class="niveau" data-niveau="mange"></span>
+    </button>
+  </div>
+  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="fin" class="ecran fin" hidden>
+  <h1 class="titre">Bravo Solal !</h1>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p class="fin-texte" id="fin-texte"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Encore</button>
+    <button class="rep large gris" id="btn-accueil">Accueil</button>
+  </div>
+</section>
+
+<!-- ============ PARENT ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent · Le monde</h2>
+  </div>
+  <p>Questionner le monde au CP : distinguer le vivant du non-vivant, nommer les parties du corps et les cinq sens, connaître les milieux de vie et l'alimentation des animaux.</p>
+  <div class="legende">
+    <span><i style="background:#CDEBD8"></i>80 % et plus</span>
+    <span><i style="background:#FBE3BE"></i>50 à 79 %</span>
+    <span><i style="background:#F6D0C6"></i>moins de 50 %</span>
+  </div>
+  <div id="stats"></div>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte danger" id="btn-reset">Remettre le monde à zéro</button>
+  </div>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, choisir, melanger, dire } = Solal;
+  const NOMS = { vivant: 'Vivant ou pas ?', corps: 'Mon corps', habitat: 'Où vit-il ?', mange: 'Qui mange quoi ?' };
+
+  const VIVANTS = [
+    { e: '🌳', n: 'un arbre', v: true }, { e: '🐶', n: 'un chien', v: true }, { e: '🌷', n: 'une fleur', v: true },
+    { e: '🐟', n: 'un poisson', v: true }, { e: '🍄', n: 'un champignon', v: true }, { e: '👶', n: 'un bébé', v: true },
+    { e: '🐝', n: 'une abeille', v: true }, { e: '🌵', n: 'un cactus', v: true }, { e: '🐌', n: 'un escargot', v: true },
+    { e: '🐦', n: 'un oiseau', v: true }, { e: '🌱', n: 'une petite plante', v: true }, { e: '🐛', n: 'une chenille', v: true },
+    { e: '🪨', n: 'un caillou', v: false }, { e: '🚗', n: 'une voiture', v: false }, { e: '🧸', n: 'un ours en peluche', v: false },
+    { e: '🤖', n: 'un robot', v: false }, { e: '⚽', n: 'un ballon', v: false }, { e: '🏠', n: 'une maison', v: false },
+    { e: '✏️', n: 'un crayon', v: false }, { e: '🪑', n: 'une chaise', v: false }, { e: '💧', n: "une goutte d'eau", v: false },
+    { e: '☀️', n: 'le soleil', v: false }, { e: '👟', n: 'une chaussure', v: false }, { e: '📱', n: 'un téléphone', v: false }
+  ];
+
+  const CORPS = [
+    { e: '👁️', n: "l'œil" }, { e: '👂', n: "l'oreille" }, { e: '👃', n: 'le nez' }, { e: '👄', n: 'la bouche' },
+    { e: '✋', n: 'la main' }, { e: '🦶', n: 'le pied' }, { e: '🦵', n: 'la jambe' }, { e: '💪', n: 'le bras' },
+    { e: '🦷', n: 'la dent' }, { e: '👅', n: 'la langue' }
+  ];
+  const SENS = [
+    { q: 'Avec quoi est-ce que tu vois ?', e: '👁️', r: 'Je vois avec mes yeux.' },
+    { q: 'Avec quoi est-ce que tu entends ?', e: '👂', r: "J'entends avec mes oreilles." },
+    { q: 'Avec quoi est-ce que tu sens les odeurs ?', e: '👃', r: 'Je sens les odeurs avec mon nez.' },
+    { q: 'Avec quoi est-ce que tu goûtes ?', e: '👅', r: 'Je goûte avec ma langue.' },
+    { q: 'Avec quoi est-ce que tu touches ?', e: '✋', r: 'Je touche avec mes mains.' }
+  ];
+
+  const LIEUX = {
+    ferme: { e: '🚜', n: 'la ferme', a: 'à la ferme' },
+    mer: { e: '🌊', n: 'la mer', a: 'dans la mer' },
+    foret: { e: '🌲', n: 'la forêt', a: 'dans la forêt' },
+    savane: { e: '🌴', n: 'la savane', a: 'dans la savane' },
+    banquise: { e: '🧊', n: 'la banquise', a: 'sur la banquise' }
+  };
+  const ANIMAUX = [
+    { e: '🐄', n: 'la vache', l: 'ferme' }, { e: '🐷', n: 'le cochon', l: 'ferme' }, { e: '🐔', n: 'la poule', l: 'ferme' },
+    { e: '🐑', n: 'le mouton', l: 'ferme' }, { e: '🐴', n: 'le cheval', l: 'ferme' },
+    { e: '🐳', n: 'la baleine', l: 'mer' }, { e: '🐙', n: 'la pieuvre', l: 'mer' }, { e: '🦀', n: 'le crabe', l: 'mer' },
+    { e: '🐬', n: 'le dauphin', l: 'mer' }, { e: '🦈', n: 'le requin', l: 'mer' },
+    { e: '🐿️', n: "l'écureuil", l: 'foret' }, { e: '🦊', n: 'le renard', l: 'foret' }, { e: '🦉', n: 'le hibou', l: 'foret' },
+    { e: '🦌', n: 'le cerf', l: 'foret' }, { e: '🦔', n: 'le hérisson', l: 'foret' },
+    { e: '🦁', n: 'le lion', l: 'savane' }, { e: '🦒', n: 'la girafe', l: 'savane' }, { e: '🦓', n: 'le zèbre', l: 'savane' },
+    { e: '🐘', n: "l'éléphant", l: 'savane' },
+    { e: '🐻‍❄️', n: "l'ours blanc", l: 'banquise' }, { e: '🐧', n: 'le manchot', l: 'banquise' }, { e: '🦭', n: 'le phoque', l: 'banquise' }
+  ];
+
+  const REPAS = [
+    { e: '🐰', n: 'le lapin', m: { e: '🥕', n: 'des carottes' } },
+    { e: '🐒', n: 'le singe', m: { e: '🍌', n: 'des bananes' } },
+    { e: '🐄', n: 'la vache', m: { e: '🌿', n: "de l'herbe" } },
+    { e: '🐝', n: "l'abeille", m: { e: '🌸', n: 'le nectar des fleurs' } },
+    { e: '🐿️', n: "l'écureuil", m: { e: '🌰', n: 'des noisettes' } },
+    { e: '🐼', n: 'le panda', m: { e: '🎋', n: 'du bambou' } },
+    { e: '🐭', n: 'la souris', m: { e: '🧀', n: 'du fromage' } },
+    { e: '🐶', n: 'le chien', m: { e: '🦴', n: 'un os' } },
+    { e: '🐻', n: "l'ours", m: { e: '🍯', n: 'du miel' } },
+    { e: '🐔', n: 'la poule', m: { e: '🌾', n: 'des graines' } }
+  ];
+
+  let dernier = null;
+  const tirer = liste => { let x, k = 0; do { x = choisir(liste); k++; } while (liste.length > 1 && x.e === dernier && k < 20); dernier = x.e; return x; };
+  const sceneImage = e => { $('#scene').innerHTML = `<div class="grand-emoji" aria-hidden="true">${e}</div>`; };
+  const Maj = t => t.charAt(0).toUpperCase() + t.slice(1);
+
+  const JEUX = {
+    vivant: {
+      paliers: 1,
+      preparer(m) {
+        const x = tirer(VIVANTS);
+        m.jeu.cle = x.v ? 'vivant' : 'pas vivant';
+        sceneImage(x.e);
+        const explication = x.v ? `${Maj(x.n)}, c'est vivant : ça naît, ça grandit, ça se nourrit.` : `${Maj(x.n)}, ce n'est pas vivant : ça ne naît pas et ça ne grandit pas.`;
+        m.choix(['oui', 'non'], {
+          cible: x.v ? 'oui' : 'non',
+          classe: 'petit-texte',
+          rendu: r => r === 'oui' ? '✓ oui' : '✗ non',
+          style: r => r === 'oui' ? 'border-color:var(--algue);box-shadow:0 7px 0 var(--algue-fonce)' : 'border-color:var(--corail);box-shadow:0 7px 0 var(--corail-fonce)',
+          dit: r => r,
+          unCoup: true,
+          aider: async () => { await dire(explication); },
+          bravo: () => `${choisir(Solal.BRAVOS)} ${explication}`
+        });
+        m.consigne(`${x.n.startsWith('un') ? "Est-ce qu'" : 'Est-ce que '}${x.n}, c'est vivant ?`);
+      }
+    },
+
+    corps: {
+      paliers: 2,
+      libelle: p => p === 0 ? 'les parties du corps' : 'les cinq sens',
+      montee: () => 'Bravo ! Maintenant, les cinq sens.',
+      preparer(m, p) {
+        if (p === 0) {
+          const x = tirer(CORPS);
+          m.jeu.cle = x.n;
+          $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
+          $('#scene .oreille').addEventListener('click', () => { if (!m.occupe) m.consigne(m.jeu.consigne); });
+          const options = melanger([x, ...melanger(CORPS.filter(y => y !== x)).slice(0, 3)]);
+          m.choix(options, {
+            cible: x, classe: 'emoji', rendu: y => y.e, dit: y => y.n,
+            aider: async y => { await dire(`Ça, c'est ${y.n}. Trouve ${x.n}.`); },
+            bravo: () => `${choisir(Solal.BRAVOS)} C'est ${x.n}.`
+          });
+          m.consigne(`Trouve ${x.n}.`);
+        } else {
+          const s = tirer(SENS);
+          m.jeu.cle = s.e;
+          $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
+          $('#scene .oreille').addEventListener('click', () => { if (!m.occupe) m.consigne(m.jeu.consigne); });
+          const options = melanger(SENS.map(y => y.e)).slice(0, 4);
+          if (!options.includes(s.e)) options[0] = s.e;
+          const nom = e => CORPS.find(c => c.e === e).n;
+          m.choix(melanger(options), {
+            cible: s.e, classe: 'emoji', rendu: e => e, dit: e => nom(e),
+            aider: async () => { await dire(s.r); },
+            bravo: () => `${choisir(Solal.BRAVOS)} ${s.r}`
+          });
+          m.consigne(s.q);
+        }
+      }
+    },
+
+    habitat: {
+      paliers: 2,
+      libelle: p => p === 0 ? 'ferme, mer, forêt' : '+ savane, banquise',
+      montee: () => 'Bravo ! Deux nouveaux endroits : la savane et la banquise.',
+      preparer(m, p) {
+        const lieux = p === 0 ? ['ferme', 'mer', 'foret'] : Object.keys(LIEUX);
+        const x = tirer(ANIMAUX.filter(a => lieux.includes(a.l)));
+        m.jeu.cle = x.n;
+        sceneImage(x.e);
+        const L = LIEUX[x.l];
+        m.choix(lieux, {
+          cible: x.l,
+          classe: 'lieu',
+          rendu: k => `<span>${LIEUX[k].e}</span>${LIEUX[k].n}`,
+          dit: k => LIEUX[k].n,
+          aider: async () => { await dire(`${Maj(x.n)} vit ${L.a}.`); },
+          bravo: () => `${choisir(Solal.BRAVOS)} ${Maj(x.n)} vit ${L.a}.`
+        });
+        m.consigne(`Où vit ${x.n} ?`);
+      }
+    },
+
+    mange: {
+      paliers: 2,
+      libelle: p => p === 0 ? '3 choix' : '4 choix',
+      montee: () => 'Bravo ! Maintenant, un choix de plus.',
+      preparer(m, p) {
+        const x = tirer(REPAS);
+        m.jeu.cle = x.n;
+        sceneImage(x.e);
+        const options = melanger([x.m, ...melanger(REPAS.filter(y => y !== x).map(y => y.m)).slice(0, p === 0 ? 2 : 3)]);
+        m.choix(options, {
+          cible: x.m, classe: 'emoji', rendu: y => y.e, dit: y => y.n,
+          aider: async () => { await dire(`${Maj(x.n)} mange ${x.m.n}.`); },
+          bravo: () => `${choisir(Solal.BRAVOS)} ${Maj(x.n)} mange ${x.m.n}.`
+        });
+        m.consigne(`Qu'est-ce que mange ${x.n} ?`);
+      }
+    }
+  };
+
+  const m = Solal.moteur({ cle: 'solal-monde-v1', jeux: JEUX });
+
+  function afficherParent() {
+    $('#stats').innerHTML = m.statsHTML(NOMS);
+    const b = $('#btn-reset');
+    b.textContent = 'Remettre le monde à zéro';
+    b.dataset.confirme = '';
+    Solal.montrer('parent');
+  }
+  Solal.appuiLong($('#btn-parent'), afficherParent);
+  $('#btn-parent-retour').addEventListener('click', m.retour);
+  $('#btn-reset').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = 'Confirmer : tout effacer'; return; }
+    m.effacer();
+    afficherParent();
+  });
+})();
+</script>
+</body>
+</html>

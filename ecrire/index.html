@@ -56,23 +56,28 @@
       <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
     </div>
   </div>
-  <div class="tuiles trois">
+  <div class="tuiles">
     <button class="tuile" data-jeu="traits">
       <span class="dessin">
         <svg viewBox="0 0 100 60" aria-hidden="true"><path d="M8 40 C 18 10, 28 10, 38 40 S 58 70, 68 40 S 88 10, 94 30" fill="none" stroke="#3E9E68" stroke-width="7" stroke-linecap="round"/></svg>
       </span>
       Les traits
-      <span class="niveau">ronds, vagues, boucles</span>
+      <span class="niveau" data-niveau="traits"></span>
     </button>
     <button class="tuile" data-jeu="chiffres">
       <span class="dessin" style="font-weight:700;color:var(--mer)">3</span>
       Les chiffres
-      <span class="niveau">de 0 à 9</span>
+      <span class="niveau" data-niveau="chiffres"></span>
     </button>
     <button class="tuile" data-jeu="lettres">
       <span class="dessin" style="font-weight:700;color:var(--corail-fonce)">a</span>
       Les lettres
-      <span class="niveau">a, i, o, u, é, l</span>
+      <span class="niveau" data-niveau="lettres"></span>
+    </button>
+    <button class="tuile" data-jeu="prenom">
+      <span class="dessin" style="font-size:40px;font-weight:700;color:var(--encre)">SOLAL</span>
+      Mon prénom
+      <span class="niveau" data-niveau="prenom"></span>
     </button>
   </div>
   <button class="coin-parent" id="btn-parent">Conseils parents · appui long</button>
@@ -110,7 +115,7 @@
     <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
     <h2>Conseils · écrire en étant gaucher</h2>
   </div>
-  <p>Ce jeu travaille le <strong>sens des gestes</strong> (on part du point vert, on suit le chemin) avant la taille et la précision. La piste est volontairement large, et Solal peut lever le doigt : il reprend là où il s'était arrêté.</p>
+  <p>Ce jeu travaille le <strong>sens des gestes</strong> (on part du point vert, on suit le chemin) avant la taille et la précision. Au premier niveau, la piste est large et Solal peut lever le doigt : il reprend là où il s'était arrêté. Après 3 tracés réussis sans sortir, la piste se resserre, et sortir du chemin fait recommencer le morceau (pas d'étoile pour ce tracé).</p>
   <h3>Pour l'écriture sur papier</h3>
   <ul>
     <li><strong>Feuille inclinée vers la droite</strong> (le haut de la feuille part vers la droite), posée un peu à gauche de son corps.</li>
@@ -175,12 +180,23 @@
       { nom: 'la lettre u', modele: 'u', traits: [suite([[36, 42], [36, 68]], arc(48, 68, 12, 180, 0), [[60, 68], [60, 42], [60, 84]])] },
       { nom: 'la lettre l', modele: 'l', traits: [[[50, 10], [50, 88]]] },
       { nom: 'la lettre é', modele: 'é', traits: [suite([[30, 62], [70, 62]], arc(50, 62, 20, 0, -320)), [[58, 24], [46, 36]]] }
+    ],
+    // S O L A L, dans l'ordre, en capitales comme on écrit son prénom au CP.
+    prenom: [
+      { nom: 'le S', modele: 'S', traits: [suite(arc(50, 31, 18, -30, -270), arc(50, 67, 18, 270, 510))] },
+      { nom: 'le O', modele: 'O', traits: [arc(50, 50, 26, 270, -90, 36)] },
+      { nom: 'le L', modele: 'L', traits: [[[36, 12], [36, 88], [70, 88]]] },
+      { nom: 'le A', modele: 'A', traits: [[[50, 12], [26, 88]], [[50, 12], [74, 88]], [[35, 62], [65, 62]]] },
+      { nom: 'le L', modele: 'L', traits: [[[36, 12], [36, 88], [70, 88]]] }
     ]
   };
 
   /* ---------- Piste de traçage ---------- */
-  const TOL = 12;     // distance acceptée autour du chemin, sur 100 (plus large que ce qui est dessiné)
-  const PISTE = 8;    // largeur de la piste dessinée
+  /* Trois niveaux : la zone acceptée autour du chemin se resserre (sur 100), la piste dessinée aussi.
+     À partir du 2ᵉ niveau, sortir du chemin fait recommencer le morceau. */
+  const TOLERANCES = [12, 9, 7];
+  let TOL = 12;
+  let PISTE = 8;
   const ENCRE = 1.6;  // épaisseur du trait de Solal
   const PAS = 5;      // écart entre deux points de passage
 
@@ -205,7 +221,10 @@
 
   let piste = null;
 
-  function preparerPiste(m, forme) {
+  function preparerPiste(m, forme, palier) {
+    TOL = TOLERANCES[palier];
+    PISTE = palier === 0 ? 8 : TOL * 0.75;
+    const strict = palier >= 1;
     const scene = $('#scene');
     const modele = forme.modele
       ? `<div class="grand">${forme.modele}</div>`
@@ -219,7 +238,10 @@
       trait: 0,
       cp: 0,
       encre: [],
+      debutTrait: 0,
       enCours: null,
+      sorties: 0,
+      bloque: false,
       fini: false
     };
 
@@ -325,9 +347,28 @@
       return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
     }
 
+    async function sortie() {
+      // Sorti du chemin : on efface ce morceau et on le recommence.
+      piste.sorties++;
+      if (piste.sorties === 1) { m.jeu.essais = 1; m.mauvaise(); }
+      m.jeu.essais = 2;
+      piste.cp = 0;
+      piste.encre = piste.encre.slice(0, piste.debutTrait);
+      piste.enCours = null;
+      piste.bloque = true;
+      dessiner();
+      await dire('Oups, tu es sorti du chemin. On recommence ce morceau.');
+      piste.bloque = false;
+    }
+
     async function avancer(p) {
-      if (piste.fini) return;
+      if (piste.fini || piste.bloque) return;
       const pts = piste.points[piste.trait];
+      if (strict && piste.cp > 0 && pts.length > 1) {
+        let d = Infinity;
+        for (let i = Math.max(0, piste.cp - 4); i < Math.min(piste.cp + 6, pts.length); i++) d = Math.min(d, Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+        if (d > TOL * 1.8) { await sortie(); return; }
+      }
       let meilleur = -1;
       for (let i = piste.cp; i < Math.min(piste.cp + 4, pts.length); i++) {
         if (Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]) < TOL) meilleur = i;
@@ -336,13 +377,15 @@
       if (piste.cp >= pts.length) {
         piste.trait++;
         piste.cp = 0;
+        piste.debutTrait = piste.encre.length;
         if (piste.trait >= piste.points.length) {
           piste.fini = true;
           dessiner();
           m.occupe = true;
-          m.jeu.essais = 1;
+          m.jeu.essais = piste.sorties ? 2 : 1;
           await pause(250);
-          await m.bonne(`${choisir(Solal.BRAVOS)} Tu as tracé ${forme.nom}.`);
+          const fin = forme.dernier ? ' Tu as écrit ton prénom : Solal !' : '';
+          await m.bonne(`${choisir(Solal.BRAVOS)} Tu as tracé ${forme.nom}.${fin}`);
           return;
         }
         dessiner();
@@ -351,7 +394,7 @@
     }
 
     canvas.addEventListener('pointerdown', e => {
-      if (piste.fini) return;
+      if (piste.fini || piste.bloque) return;
       canvas.setPointerCapture(e.pointerId);
       const p = coords(e);
       piste.enCours = [p];
@@ -375,6 +418,7 @@
       piste.trait = 0;
       piste.cp = 0;
       piste.encre = [];
+      piste.debutTrait = 0;
       dessiner();
     });
 
@@ -385,21 +429,28 @@
 
   /* ---------- Séances : 6 formes tirées dans la famille choisie ---------- */
   const tirages = {};
-  function formeSuivante(famille) {
+  function formeSuivante(famille, num) {
+    if (famille === 'prenom') {
+      const f = FORMES.prenom[num - 1];
+      return { ...f, dernier: num === FORMES.prenom.length };
+    }
     if (!tirages[famille] || !tirages[famille].length) tirages[famille] = melanger([...FORMES[famille]]);
     return tirages[famille].pop();
   }
   const jeu = famille => ({
-    parSeance: 6,
-    preparer(m) {
-      const forme = formeSuivante(famille);
-      preparerPiste(m, forme);
+    parSeance: famille === 'prenom' ? FORMES.prenom.length : 6,
+    paliers: 3,
+    libelle: p => ['piste large', 'piste moyenne', 'piste fine'][p],
+    montee: p => p === 1 ? 'Bravo ! Maintenant, le chemin est plus fin : reste bien dessus !' : 'Bravo ! Le chemin devient encore plus fin.',
+    preparer(m, palier) {
+      const forme = formeSuivante(famille, m.jeu.num);
+      preparerPiste(m, forme, palier);
       const debut = m.jeu.num === 1 ? ' Suis le chemin jusqu\'au bout, sans te presser.' : '';
       m.consigne(`Trace ${forme.nom}. Pose ton doigt sur le point vert.${debut}`);
     }
   });
 
-  const m = Solal.moteur({ cle: 'solal-ecrire-v1', jeux: { traits: jeu('traits'), chiffres: jeu('chiffres'), lettres: jeu('lettres') } });
+  const m = Solal.moteur({ cle: 'solal-ecrire-v1', jeux: { traits: jeu('traits'), chiffres: jeu('chiffres'), lettres: jeu('lettres'), prenom: jeu('prenom') } });
 
   Solal.appuiLong($('#btn-parent'), () => Solal.montrer('parent'));
   $('#btn-parent-retour').addEventListener('click', m.retour);

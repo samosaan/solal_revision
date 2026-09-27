@@ -66,20 +66,24 @@
 
   /* ---------- Voix ---------- */
   const parle = 'speechSynthesis' in window;
-  let voix = null;
+  let voix = null, voixEn = null;
   function choisirVoix() {
-    const fr = speechSynthesis.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+    const toutes = speechSynthesis.getVoices();
+    const fr = toutes.filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
     voix = fr.find(v => /fr[-_]fr/i.test(v.lang) && /amélie|amelie|thomas|audrey|marie|google/i.test(v.name))
         || fr.find(v => /fr[-_]fr/i.test(v.lang)) || fr[0] || null;
+    const en = toutes.filter(v => (v.lang || '').toLowerCase().startsWith('en'));
+    voixEn = en.find(v => /en[-_]gb/i.test(v.lang)) || en.find(v => /en[-_]us/i.test(v.lang)) || en[0] || null;
   }
   if (parle) { choisirVoix(); speechSynthesis.onvoiceschanged = choisirVoix; }
-  function dire(texte, { vitesse = 0.85 } = {}) {
+  /* langue : 'fr' (par défaut) ou 'en' pour l'anglais. */
+  function dire(texte, { vitesse = 0.85, langue = 'fr' } = {}) {
     return new Promise(fin => {
       if (!parle) { setTimeout(fin, 400 + texte.length * 40); return; }
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(texte);
-      u.lang = 'fr-FR';
-      if (voix) u.voice = voix;
+      if (langue === 'en') { u.lang = 'en-GB'; if (voixEn) u.voice = voixEn; }
+      else { u.lang = 'fr-FR'; if (voix) u.voice = voix; }
       u.rate = vitesse;
       u.pitch = 1.05;
       let fait = false;
@@ -135,6 +139,8 @@
 
   /* ---------- Déroulé d'une séance ----------
      jeux = { id: { preparer(m, palier), paliers, parSeance, libelle(palier), montee(palier) } } */
+  /* Un palier de plus après 3 réussites du premier coup d'affilée, un de moins après 2 erreurs d'affilée. */
+  const MONTEE = 3;
   function moteur({ cle, jeux, parSeance = 8 }) {
     const defaut = () => ({ paliers: {}, serie: {}, ratees: {}, stats: {} });
     const etat = lire(cle, defaut);
@@ -176,6 +182,7 @@
       j.essais = 0;
       j.cle = null;
       j.consigne = '';
+      j.rejouer = null;
       progres();
       $('#scene').innerHTML = '';
       $('#reponses').innerHTML = '';
@@ -210,7 +217,7 @@
         }
         etat.serie[j.id]++;
         etat.ratees[j.id] = 0;
-        if (etat.serie[j.id] >= 5 && etat.paliers[j.id] < nbPaliers(j.id) - 1) {
+        if (etat.serie[j.id] >= MONTEE && etat.paliers[j.id] < nbPaliers(j.id) - 1) {
           etat.paliers[j.id]++;
           etat.serie[j.id] = 0;
           const msg = jeux[j.id].montee && jeux[j.id].montee(etat.paliers[j.id]);
@@ -316,7 +323,9 @@
     $('#btn-accueil') && $('#btn-accueil').addEventListener('click', retour);
     $('#btn-encore') && $('#btn-encore').addEventListener('click', () => m.lancer(m.jeu.id));
     $('#btn-reecouter') && $('#btn-reecouter').addEventListener('click', () => {
-      if (!m.occupe && m.jeu && m.jeu.consigne) m.consigne(m.jeu.consigne);
+      if (m.occupe || !m.jeu) return;
+      if (m.jeu.rejouer) m.jeu.rejouer();
+      else if (m.jeu.consigne) m.consigne(m.jeu.consigne);
     });
     m.retour = retour;
     m.libelles();

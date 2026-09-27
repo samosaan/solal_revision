@@ -53,7 +53,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(18px, 4vh, 34px);
+    gap: clamp(14px, 3vh, 28px);
     padding-inline: max(16px, env(safe-area-inset-left, 0px));
     padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
   }
@@ -110,8 +110,8 @@
   .jeux {
     width: min(100%, 1020px);
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: clamp(14px, 2.4vw, 24px);
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(12px, 2vw, 22px);
   }
   .jeu {
     --c: var(--mer);
@@ -135,10 +135,12 @@
   .jeu.sons { --c: var(--corail); --c-fonce: var(--corail-fonce); }
   .jeu.ecrire { --c: var(--algue); --c-fonce: var(--algue-fonce); }
   .jeu.jours { --c: var(--or); --c-fonce: var(--or-fonce); color: var(--encre); }
+  .jeu.anglais { --c: #8466B0; --c-fonce: #5E4785; }
+  .jeu.monde { --c: #2E9C8F; --c-fonce: #1F7268; }
   .jeu .dessin {
     width: 100%;
     max-width: 100%;
-    aspect-ratio: 1;
+    aspect-ratio: 16 / 10;
     border-radius: 22px;
     background: var(--blanc);
     display: grid;
@@ -242,6 +244,25 @@
         </svg>
       </span>
       Les jours
+    </a>
+    <a class="jeu anglais" href="anglais/" data-nom="English">
+      <span class="dessin">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="30" cy="36" r="14" fill="#E0463A"/><circle cx="56" cy="30" r="14" fill="#2F6FD0"/><circle cx="72" cy="56" r="14" fill="#F6CF2F"/>
+          <text x="38" y="84" font-family="Andika, Comic Sans MS, sans-serif" font-size="26" font-weight="700" fill="#5E4785" text-anchor="middle">Hello!</text>
+        </svg>
+      </span>
+      English
+    </a>
+
+    <a class="jeu monde" href="monde/" data-nom="Le monde">
+      <span class="dessin">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="34" fill="#7CC6E8"/>
+          <path d="M30 34c8-6 16-2 18 4s-6 10-4 16-8 8-12 2-10-16-2-22zM58 28c10 0 18 8 16 16s-10 4-12 12-10 6-10-2 0-26 6-26zM56 66c6-2 12 2 10 8s-10 6-12 2 0-8 2-10z" fill="#3E9E68"/>
+        </svg>
+      </span>
+      Le monde
     </a>
   </nav>
 </main>

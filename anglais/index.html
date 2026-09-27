@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>English avec Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  .oreille {
+    width: clamp(150px, 32vh, 240px); height: clamp(150px, 32vh, 240px);
+    border-radius: 50%; background: #8466B0; color: var(--blanc);
+    display: grid; place-items: center; box-shadow: 0 8px 0 #5E4785;
+  }
+  .oreille svg { width: 50%; height: 50%; }
+  .drapeau { font-size: clamp(60px, 12vh, 100px); }
+  .rep.couleur { min-width: clamp(100px, 16vw, 150px); padding: 0; }
+  .rep.couleur span { width: 70%; height: 70%; border-radius: 50%; display: block; border: 3px solid rgba(0,0,0,.15); }
+  .rep.emoji { font-size: clamp(60px, 13vh, 100px); min-width: clamp(110px, 18vw, 170px); }
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="ecran accueil">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">English <small>Couleurs, nombres, émotions, météo</small></h1>
+    </div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="tuiles">
+    <button class="tuile" data-jeu="couleurs">
+      <span class="dessin">🎨</span>
+      Colours
+      <span class="niveau" data-niveau="couleurs"></span>
+    </button>
+    <button class="tuile" data-jeu="nombres">
+      <span class="dessin" style="font-weight:700;color:#8466B0">1 2 3</span>
+      Numbers
+      <span class="niveau" data-niveau="nombres"></span>
+    </button>
+    <button class="tuile" data-jeu="emotions">
+      <span class="dessin">😀</span>
+      Feelings
+      <span class="niveau" data-niveau="emotions"></span>
+    </button>
+    <button class="tuile" data-jeu="meteo">
+      <span class="dessin">🌦️</span>
+      Weather
+      <span class="niveau" data-niveau="meteo"></span>
+    </button>
+  </div>
+  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="fin" class="ecran fin" hidden>
+  <h1 class="titre">Well done, Solal!</h1>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p class="fin-texte" id="fin-texte"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Encore</button>
+    <button class="rep large gris" id="btn-accueil">Accueil</button>
+  </div>
+</section>
+
+<!-- ============ PARENT ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent · English</h2>
+  </div>
+  <p>Les rituels d'anglais de la classe (la date et la météo, puis les émotions) en petits jeux d'écoute. La consigne est en français, le mot à trouver est dit par une voix anglaise. Si la tablette n'a pas de voix anglaise installée, iPad : Réglages → Accessibilité → Contenu énoncé → Voix → Anglais.</p>
+  <div class="legende">
+    <span><i style="background:#CDEBD8"></i>80 % et plus</span>
+    <span><i style="background:#FBE3BE"></i>50 à 79 %</span>
+    <span><i style="background:#F6D0C6"></i>moins de 50 %</span>
+  </div>
+  <div id="stats"></div>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte danger" id="btn-reset">Remettre l'anglais à zéro</button>
+  </div>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, choisir, melanger, dire } = Solal;
+  const en = (t, vitesse = 0.8) => dire(t, { langue: 'en', vitesse });
+
+  const COULEURS = [
+    { en: 'red', c: '#E0463A' }, { en: 'blue', c: '#2F6FD0' }, { en: 'green', c: '#3E9E48' }, { en: 'yellow', c: '#F6CF2F' },
+    { en: 'orange', c: '#F28C28' }, { en: 'pink', c: '#F29BC0' }, { en: 'purple', c: '#8A4FB8' }, { en: 'brown', c: '#8B5A2B' },
+    { en: 'black', c: '#222222' }, { en: 'white', c: '#FFFFFF' }
+  ];
+  const NOMBRES = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+  const EMOTIONS = [
+    { en: 'happy', e: '😀' }, { en: 'sad', e: '😢' }, { en: 'angry', e: '😠' }, { en: 'scared', e: '😨' },
+    { en: 'tired', e: '😴' }, { en: 'surprised', e: '😲' }
+  ];
+  const METEO = [
+    { en: 'sunny', e: '☀️' }, { en: 'rainy', e: '🌧️' }, { en: 'cloudy', e: '☁️' }, { en: 'snowy', e: '🌨️' },
+    { en: 'windy', e: '🌬️' }, { en: 'stormy', e: '⛈️' }
+  ];
+  const NOMS = { couleurs: 'Colours', nombres: 'Numbers', emotions: 'Feelings', meteo: 'Weather' };
+
+  let dernier = null;
+  const tirer = liste => { let x, k = 0; do { x = choisir(liste); k++; } while (liste.length > 1 && x.en === dernier && k < 20); dernier = x.en; return x; };
+
+  /* Consigne en deux voix : le français, puis le mot anglais. Le bouton haut-parleur la rejoue. */
+  function annoncer(m, fr, mot) {
+    const jouer = async () => { m.occupe = true; await dire(fr); await en(mot); m.occupe = false; };
+    m.jeu.consigne = fr;
+    m.jeu.rejouer = jouer;
+    return jouer();
+  }
+  function sceneOreille(m) {
+    $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
+    $('#scene .oreille').addEventListener('click', () => { if (!m.occupe && m.jeu.rejouer) m.jeu.rejouer(); });
+  }
+
+  /* Jeu générique : entendre un mot anglais, toucher la bonne image. */
+  function jeuEcoute({ liste, paliers, rendu, classe, question }) {
+    return {
+      paliers: 2,
+      libelle: p => paliers[p].libelle,
+      montee: () => 'Great! De nouveaux mots arrivent !',
+      preparer(m, p) {
+        const pool = liste.slice(0, paliers[p].nb);
+        const cible = tirer(pool);
+        const options = melanger([cible, ...melanger(pool.filter(x => x !== cible)).slice(0, p === 0 ? 2 : 3)]);
+        m.jeu.cle = cible.en;
+        sceneOreille(m);
+        m.choix(options, {
+          cible,
+          classe,
+          rendu,
+          dit: () => '',
+          avantBravo: () => en(`Yes! ${cible.en}!`, 0.85),
+          aider: async x => { await dire("Ça, c'est"); await en(x.en); await dire('Écoute encore.'); await en(cible.en); },
+          bravo: () => choisir(Solal.BRAVOS)
+        });
+        annoncer(m, question, cible.en);
+      }
+    };
+  }
+
+  const JEUX = {
+    couleurs: jeuEcoute({
+      liste: COULEURS,
+      paliers: [{ nb: 4, libelle: '4 couleurs' }, { nb: 10, libelle: '10 couleurs' }],
+      classe: 'couleur',
+      rendu: x => `<span style="background:${x.c}"></span>`,
+      question: 'Trouve la couleur :'
+    }),
+    nombres: jeuEcoute({
+      liste: NOMBRES.map((w, i) => ({ en: w, n: i + 1 })),
+      paliers: [{ nb: 5, libelle: '1 à 5' }, { nb: 10, libelle: '1 à 10' }],
+      classe: '',
+      rendu: x => x.n,
+      question: 'Trouve le nombre :'
+    }),
+    emotions: jeuEcoute({
+      liste: EMOTIONS,
+      paliers: [{ nb: 4, libelle: '4 émotions' }, { nb: 6, libelle: '6 émotions' }],
+      classe: 'emoji',
+      rendu: x => x.e,
+      question: 'Trouve le visage :'
+    }),
+    meteo: jeuEcoute({
+      liste: METEO,
+      paliers: [{ nb: 4, libelle: '4 temps' }, { nb: 6, libelle: '6 temps' }],
+      classe: 'emoji',
+      rendu: x => x.e,
+      question: 'Quel temps fait-il ?'
+    })
+  };
+
+  const m = Solal.moteur({ cle: 'solal-anglais-v1', jeux: JEUX });
+
+  function afficherParent() {
+    $('#stats').innerHTML = m.statsHTML(NOMS, {
+      couleurs: COULEURS.map(x => x.en), nombres: NOMBRES, emotions: EMOTIONS.map(x => x.en), meteo: METEO.map(x => x.en)
+    });
+    const b = $('#btn-reset');
+    b.textContent = "Remettre l'anglais à zéro";
+    b.dataset.confirme = '';
+    Solal.montrer('parent');
+  }
+  Solal.appuiLong($('#btn-parent'), afficherParent);
+  $('#btn-parent-retour').addEventListener('click', m.retour);
+  $('#btn-reset').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = 'Confirmer : tout effacer'; return; }
+    m.effacer();
+    afficherParent();
+  });
+})();
+</script>
+</body>
+</html>

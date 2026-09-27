@@ -11,6 +11,13 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
 <link rel="stylesheet" href="../commun/commun.css">
 <style>
+  .tuiles.cinq { grid-template-columns: repeat(3, 1fr); max-width: 900px; }
+  .tuiles.cinq .dessin { aspect-ratio: 16 / 9; }
+  .mot-a-lire { font-size: clamp(80px, 20vh, 160px); font-weight: 700; letter-spacing: .02em; line-height: 1; }
+  .syl-a { color: var(--mer); }
+  .syl-b { color: var(--corail-fonce); }
+  .muette { color: var(--galet); }
+  .rep.image { font-size: clamp(60px, 13vh, 100px); min-width: clamp(120px, 20vw, 190px); }
   .image-mot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .grand-emoji { font-size: clamp(100px, 26vh, 190px); line-height: 1; }
   .mot-ecrit { font-size: clamp(30px, 6vh, 46px); font-weight: 700; color: var(--encre-douce); letter-spacing: 0.04em; }
@@ -73,7 +80,7 @@
       <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
     </div>
   </div>
-  <div class="tuiles">
+  <div class="tuiles cinq">
     <button class="tuile" data-jeu="syllabes">
       <span class="dessin">👏</span>
       Les syllabes
@@ -93,6 +100,11 @@
       <span class="dessin" style="font-size:48px;font-weight:700"><span><span style="color:var(--corail-fonce)">l</span><span style="color:var(--mer)">a</span></span></span>
       J'assemble
       <span class="niveau" data-niveau="assemble"></span>
+    </button>
+    <button class="tuile" data-jeu="lis">
+      <span class="dessin" style="font-size:44px;font-weight:700"><span><span style="color:var(--mer)">la</span><span style="color:var(--corail-fonce)">ma</span></span></span>
+      Je lis
+      <span class="niveau" data-niveau="lis"></span>
     </button>
   </div>
   <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
@@ -135,6 +147,7 @@
     <li><strong>Les syllabes</strong> : compter les morceaux d'un mot à l'oral. C'est la base de tout le reste.</li>
     <li><strong>J'entends</strong> : repérer un son dans un mot, sans rien lire.</li>
     <li><strong>La lettre</strong> : relier un son entendu à la lettre écrite.</li>
+    <li><strong>Je lis</strong> : la voix ne lit pas le mot, Solal le déchiffre seul et choisit l'image. Syllabes colorées une sur deux, lettres muettes en gris, comme dans Taoki.</li>
     <li><strong>J'assemble</strong> : la fusion. La consonne n'est jamais prononcée seule (une voix de synthèse la déformerait) : Solal voit « l » et « a » se coller et entend « la ».</li>
   </ul>
   <div class="legende">
@@ -143,7 +156,7 @@
     <span><i style="background:#F6D0C6"></i>moins de 50 %</span>
   </div>
   <div id="stats"></div>
-  <p>Chaque jeu monte d'un palier après 5 bonnes réponses d'affilée et redescend après 2 erreurs d'affilée. Les étoiles sont communes à tous les jeux.</p>
+  <p>Chaque jeu monte d'un palier après 3 réussites du premier coup d'affilée et redescend après 2 erreurs d'affilée. Les étoiles sont communes à tous les jeux.</p>
   <div class="actions" style="justify-content:flex-start">
     <button class="btn-texte danger" id="btn-reset">Remettre les sons à zéro</button>
   </div>
@@ -193,18 +206,47 @@
     { m: 'papillon', e: '🦋', s: ['pa', 'pi', 'yon'], v: ['a', 'i'] },
     { m: 'crocodile', e: '🐊', s: ['cro', 'co', 'dile'], v: ['o', 'i'] },
     { m: 'escargot', e: '🐌', s: ['ès', 'car', 'go'], v: ['a', 'o'] },
-    { m: 'koala', e: '🐨', s: ['ko', 'a', 'la'], v: ['o', 'a'] }
+    { m: 'koala', e: '🐨', s: ['ko', 'a', 'la'], v: ['o', 'a'] },
+    { m: 'hélicoptère', e: '🚁', s: ['hé', 'li', 'cop', 'tère'], v: ['é', 'i', 'o'] },
+    { m: 'télévision', e: '📺', s: ['té', 'lé', 'vi', 'zion'], v: ['é', 'i'] },
+    { m: 'ordinateur', e: '💻', s: ['or', 'di', 'na', 'teur'], v: ['o', 'i', 'a'] },
+    { m: 'hippopotame', e: '🦛', s: ['i', 'po', 'po', 'tam'], v: ['i', 'o', 'a'] }
   ];
 
-  const NOMS = { syllabes: 'Les syllabes', entends: "J'entends", lettre: 'La lettre', assemble: "J'assemble" };
-  const VOYELLES_ENTENDS = [['a', 'i', 'o'], ['a', 'i', 'o', 'u', 'é'], ['a', 'i', 'o', 'u', 'é', 'ou']];
-  const LETTRES = [
-    ['a', 'i', 'o'],
-    ['a', 'i', 'o', 'u', 'é', 'ou'],
-    ['la', 'li', 'lo', 'lu', 'ra', 'ri', 'ro', 'ru', 'ma', 'mi', 'mo', 'mu']
+  /* Mots à lire : « | » sépare les syllabes (colorées une sur deux), les lettres muettes sont entre parenthèses.
+     Niveau 1 : lettres déjà vues, sans piège. Niveau 2 : lettres muettes, « ou », « ch ». */
+  const A_LIRE = [
+    [
+      { m: 'la|ma', e: '🦙', n: 'un lama' }, { m: 'so|fa', e: '🛋️', n: 'un sofa' }, { m: 'vé|lo', e: '🚲', n: 'un vélo' },
+      { m: 'mur', e: '🧱', n: 'un mur' }, { m: 'fil', e: '🧵', n: 'un fil' }, { m: 'fé(e)', e: '🧚', n: 'une fée' },
+      { m: 'ra|m(e)', e: '🚣', n: 'une rame' }, { m: 'lu|n(e)', e: '🌙', n: 'la lune' }, { m: 'na|vi|r(e)', e: '🚢', n: 'un navire' },
+      { m: 'si|rè|n(e)', e: '🧜‍♀️', n: 'une sirène' }, { m: 'mo|to', e: '🏍️', n: 'une moto' }, { m: 'ro|bo(t)', e: '🤖', n: 'un robot' }
+    ],
+    [
+      { m: 'cha(t)', e: '🐱', n: 'un chat' }, { m: 'ri(z)', e: '🍚', n: 'du riz' }, { m: 'li(t)', e: '🛏️', n: 'un lit' },
+      { m: 'ra(t)', e: '🐀', n: 'un rat' }, { m: 'lou(p)', e: '🐺', n: 'un loup' }, { m: 'sou|ri(s)', e: '🐭', n: 'une souris' },
+      { m: 'rou(e)', e: '🛞', n: 'une roue' }, { m: 'mou|ch(e)', e: '🪰', n: 'une mouche' }, { m: 'va|ch(e)', e: '🐄', n: 'une vache' },
+      { m: 'ju(s)', e: '🧃', n: 'du jus' }, { m: 'che|val', e: '🐴', n: 'un cheval' }, { m: 'four|mi', e: '🐜', n: 'une fourmi' },
+      { m: 'jour|nal', e: '📰', n: 'un journal' }, { m: 'cho|co|la(t)', e: '🍫', n: 'du chocolat' }
+    ]
   ];
+  const motPlat = m => m.replace(/[|()]/g, '');
+  function motHTML(m) {
+    return m.split('|').map((syl, i) =>
+      `<span class="syl ${i % 2 ? 'syl-b' : 'syl-a'}">${syl.replace(/\(([^)]*)\)/g, '<span class="muette">$1</span>')}</span>`).join('');
+  }
+
+  const NOMS = { syllabes: 'Les syllabes', entends: "J'entends", lettre: 'La lettre', assemble: "J'assemble", lis: 'Je lis' };
+  const VOYELLES_ENTENDS = [['a', 'i', 'o', 'u'], ['a', 'i', 'o', 'u', 'é', 'ou'], ['a', 'i', 'o', 'u', 'é', 'ou']];
   const CONSONNES = ['l', 'r', 'm', 's', 'f', 'ch', 'v', 'n', 'j'];
-  const VOYELLES_FUSION = ['a', 'i', 'o', 'u', 'é'];
+  const VOYELLES_FUSION = ['a', 'i', 'o', 'u', 'é', 'ou'];
+  const syllabesDe = (cs, vs) => cs.flatMap(c => vs.map(v => c + v));
+  const LETTRES = [
+    ['a', 'i', 'o', 'u', 'é', 'e', 'ou'],
+    syllabesDe(['l', 'r', 'm', 's', 'f'], ['a', 'i', 'o', 'u']),
+    syllabesDe(CONSONNES, ['a', 'i', 'o', 'u', 'é']),
+    syllabesDe(CONSONNES, ['a', 'i', 'o', 'u', 'é', 'ou'])
+  ];
 
   let dernier = null;
   const tirer = (liste, cle = x => x) => {
@@ -245,17 +287,16 @@
 
   const JEUX = {
     syllabes: {
-      paliers: 2,
-      libelle: p => p === 0 ? 'mots courts' : 'mots longs',
+      paliers: 3,
+      libelle: p => ['1 ou 2 syllabes', "jusqu'à 3", "jusqu'à 4"][p],
       montee: () => 'Maintenant, il y a aussi des mots plus longs !',
       preparer(m, p) {
-        const max = p === 0 ? 2 : 3;
-        const n = Math.random() < 0.5 ? max : 1 + hasard(max);
+        const max = p + 2;
+        const n = Math.random() < 0.4 ? max : 1 + hasard(max);
         const mot = tirer(MOTS.filter(x => x.s.length === n), x => x.m);
         m.jeu.cle = String(n);
         sceneMot(mot);
-        const options = Array.from({ length: max }, (_, i) => i + 1);
-        m.choix(options, {
+        m.choix(Array.from({ length: max }, (_, i) => i + 1), {
           cible: n,
           rendu: k => `<span class="points">${'●'.repeat(k)}</span>`,
           dit: k => enLettres(k),
@@ -269,16 +310,19 @@
 
     entends: {
       paliers: 3,
-      libelle: p => ['a · i · o', 'a · i · o · u · é', 'a · i · o · u · é · ou'][p],
-      montee: () => 'Tu connais un nouveau son !',
+      libelle: p => ['a · i · o · u', '+ é · ou', 'mots longs'][p],
+      montee: () => 'Tu connais de nouveaux sons !',
       preparer(m, p) {
         const v = choisir(VOYELLES_ENTENDS[p]);
-        const oui = MOTS.filter(x => x.v && x.v.includes(v));
-        const non = MOTS.filter(x => x.v && !x.v.includes(v));
+        const base = p === 2 ? MOTS.filter(x => x.s.length >= 2) : MOTS;
+        const oui = base.filter(x => x.v && x.v.includes(v));
+        const non = base.filter(x => x.v && !x.v.includes(v));
         const present = Math.random() < 0.5;
         const mot = tirer(present ? oui : non, x => x.m);
         m.jeu.cle = v;
         sceneMot(mot);
+        // Au dernier palier, le mot écrit est caché : il faut vraiment écouter.
+        if (p === 2) $('.mot-ecrit').style.visibility = 'hidden';
         m.choix(['oui', 'non'], {
           cible: present ? 'oui' : 'non',
           classe: 'petit-texte',
@@ -297,18 +341,21 @@
     },
 
     lettre: {
-      paliers: 3,
-      libelle: p => ['a · i · o', 'toutes les voyelles', 'syllabes l · r · m'][p],
-      montee: p => p === 2 ? 'Bravo ! Maintenant, on cherche des syllabes.' : 'Tu connais de nouvelles lettres !',
+      paliers: 4,
+      libelle: p => ['les voyelles', 'syllabes l r m s f', 'toutes les syllabes', 'avec « ou »'][p],
+      montee: p => p === 1 ? 'Bravo ! Maintenant, on cherche des syllabes.' : 'Bravo ! De nouvelles syllabes arrivent.',
       preparer(m, p) {
         const pool = LETTRES[p];
         const x = tirer(pool);
         let autres = pool.filter(y => y !== x);
-        if (p === 2) {
-          const proches = autres.filter(y => y[0] === x[0] || y[1] === x[1]);
-          autres = proches.length >= 2 ? proches : autres;
+        if (p >= 1) {
+          // Des syllabes qui se ressemblent : même consonne ou même voyelle.
+          const cx = CONSONNES.find(c => x.startsWith(c) && (c.length === 2 || !x.startsWith('ch')));
+          const vx = x.slice(cx.length);
+          const proches = autres.filter(y => y.startsWith(cx) || y.slice(-vx.length) === vx);
+          autres = proches.length >= 3 ? proches : autres;
         }
-        const options = melanger([x, ...melanger(autres).slice(0, 2)]);
+        const options = melanger([x, ...melanger(autres).slice(0, p === 0 ? 2 : 3)]);
         m.jeu.cle = x;
         $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
         $('#scene .oreille').addEventListener('click', () => { if (!m.occupe) m.consigne(m.jeu.consigne); });
@@ -328,51 +375,86 @@
       libelle: p => `avec « ${CONSONNES[p]} »`,
       montee: () => 'Bravo ! Tu débloques une nouvelle lettre.',
       async preparer(m, p) {
-        const c = CONSONNES[p];
-        const cible = c + tirer(VOYELLES_FUSION);
+        // À partir de la 3ᵉ lettre, une fois sur deux, c'est la consonne qu'il faut trouver.
+        const modeConsonne = p >= 2 && Math.random() < 0.5;
+        const c = modeConsonne ? choisir(CONSONNES.slice(0, p + 1)) : CONSONNES[p];
+        const v = tirer(VOYELLES_FUSION);
+        const cible = c + v;
         m.jeu.cle = cible;
         $('#scene').innerHTML = `
           <div class="fusion" id="fusion">
-            <div class="carreau consonne">${c}</div>
+            <div class="carreau ${modeConsonne ? 'vide' : 'consonne'}" id="case-c">${modeConsonne ? '?' : c}</div>
             <div class="plus">+</div>
-            <div class="carreau vide" id="case-v">?</div>
+            <div class="carreau ${modeConsonne ? 'voyelle-choisie' : 'vide'}" id="case-v">${modeConsonne ? v : '?'}</div>
           </div>`;
-        const caseV = $('#case-v');
-        const poser = v => {
-          caseV.textContent = v;
-          caseV.className = 'carreau voyelle-choisie';
-          $('#fusion').classList.add('collee');
-        };
+        const caseC = $('#case-c'), caseV = $('#case-v');
+        const poserV = x => { caseV.textContent = x; caseV.className = 'carreau voyelle-choisie'; $('#fusion').classList.add('collee'); };
+        const poserC = x => { caseC.textContent = x; caseC.className = 'carreau consonne'; $('#fusion').classList.add('collee'); };
         const vider = () => {
-          caseV.textContent = '?';
-          caseV.className = 'carreau vide';
+          if (modeConsonne) { caseC.textContent = '?'; caseC.className = 'carreau vide'; }
+          else { caseV.textContent = '?'; caseV.className = 'carreau vide'; }
           $('#fusion').classList.remove('collee');
         };
 
-        // Au début de chaque séance, on montre la fusion avec toutes les voyelles.
-        if (m.jeu.num === 1) {
+        // Au début de la séance, on montre la fusion de la nouvelle lettre avec toutes les voyelles.
+        if (m.jeu.num === 1 && !modeConsonne) {
           m.occupe = true;
           await dire('Regarde et écoute.');
-          for (const v of VOYELLES_FUSION) {
-            poser(v);
+          for (const x of VOYELLES_FUSION) {
+            poserV(x);
             await pause(300);
-            await dire(c + v, { vitesse: 0.75 });
-            await pause(500);
+            await dire(c + x, { vitesse: 0.75 });
+            await pause(450);
             vider();
-            await pause(250);
+            await pause(200);
             if ($('#jeu').hidden) { m.occupe = false; return; }
           }
           m.occupe = false;
         }
 
-        m.choix(VOYELLES_FUSION, {
-          cible: cible.slice(c.length),
-          classe: 'voyelle',
-          dit: v => { poser(v); return c + v; },
-          aider: async v => { await dire(`Ça fait « ${c + v} ». Il faut « ${cible} ».`); vider(); },
-          bravo: () => `Oui ! « ${cible} ».`
+        if (modeConsonne) {
+          const consonnes = melanger([c, ...melanger(CONSONNES.slice(0, p + 1).filter(x => x !== c)).slice(0, 3)]);
+          m.choix(consonnes, {
+            cible: c,
+            classe: 'voyelle',
+            dit: x => { poserC(x); return x + v; },
+            aider: async x => { await dire(`Ça fait « ${x + v} ». Il faut « ${cible} ».`); vider(); },
+            bravo: () => `Oui ! « ${cible} ».`
+          });
+          m.consigne(`Fais « ${cible} ». Choisis la bonne lettre du début.`);
+        } else {
+          m.choix(VOYELLES_FUSION, {
+            cible: v,
+            classe: 'voyelle',
+            dit: x => { poserV(x); return c + x; },
+            aider: async x => { await dire(`Ça fait « ${c + x} ». Il faut « ${cible} ».`); vider(); },
+            bravo: () => `Oui ! « ${cible} ».`
+          });
+          m.consigne(`Fais « ${cible} ». Choisis la bonne lettre.`);
+        }
+      }
+    },
+
+    lis: {
+      paliers: 2,
+      libelle: p => ['mots simples', 'lettres muettes'][p],
+      montee: () => 'Bravo ! Maintenant, des mots avec des lettres muettes, en gris. On ne les entend pas.',
+      preparer(m, p) {
+        const pool = A_LIRE[p];
+        const mot = tirer(pool, x => x.m);
+        const autres = melanger([...A_LIRE[0], ...A_LIRE[1]].filter(x => x.e !== mot.e)).slice(0, 2);
+        const options = melanger([mot, ...autres]);
+        m.jeu.cle = motPlat(mot.m);
+        $('#scene').innerHTML = `<div class="mot-a-lire">${motHTML(mot.m)}</div>`;
+        m.choix(options, {
+          cible: mot,
+          classe: 'image',
+          rendu: x => x.e,
+          dit: x => x.n,
+          aider: async x => { await dire(`Ça, c'est ${x.n}. Lis bien le mot, doucement.`); },
+          bravo: () => `${choisir(Solal.BRAVOS)} C'est écrit « ${motPlat(mot.m)} ».`
         });
-        m.consigne(`Fais « ${cible} ». Choisis la bonne lettre.`);
+        m.consigne(m.jeu.num === 1 ? 'Lis le mot tout seul, et trouve la bonne image. Les couleurs montrent les syllabes.' : 'Lis le mot, et trouve la bonne image.');
       }
     }
   };
@@ -382,10 +464,11 @@
   /* Espace parent */
   function afficherParent() {
     $('#stats').innerHTML = m.statsHTML(NOMS, {
-      syllabes: ['1', '2', '3'],
+      syllabes: ['1', '2', '3', '4'],
       entends: ['a', 'é', 'i', 'o', 'u', 'ou'],
-      lettre: [...LETTRES[1], ...LETTRES[2]],
-      assemble: CONSONNES.flatMap(c => VOYELLES_FUSION.map(v => c + v))
+      lettre: [...LETTRES[0], ...LETTRES[3]],
+      assemble: syllabesDe(CONSONNES, VOYELLES_FUSION),
+      lis: [...A_LIRE[0], ...A_LIRE[1]].map(x => motPlat(x.m))
     });
     const b = $('#btn-reset');
     b.textContent = 'Remettre les sons à zéro';
