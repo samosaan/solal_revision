@@ -17,6 +17,7 @@ les jeux pas encore prêts apparaissent avec un cadenas.
 
 | English | `anglais/` | Écouter et reconnaître en anglais : couleurs, nombres de 1 à 10, émotions, météo (les rituels d'anglais de la classe) |
 | Le monde | `monde/` | Vivant ou pas, le corps et les cinq sens, où vivent les animaux, qui mange quoi |
+| Super Solal | `heros/` | Univers super-héros : Solal choisit son héros et combat 6 méchants (plus une mission surprise) ; chaque mission mélange 6 épreuves de domaines différents, 4 bonnes réponses du premier coup pour gagner la médaille et débloquer la suivante |
 | La boutique | `boutique/` | Échanger ses étoiles : autocollants surprise pour un album, et cadeaux choisis par le parent (bons à montrer, marqués « donnés » dans l'espace parent) |
 
 Le code partagé (voix, étoiles, déroulé des séances) est dans `commun/`.
@@ -26,7 +27,7 @@ Le code partagé (voix, étoiles, déroulé des séances) est dans `commun/`.
 - Séances courtes : 8 questions, soit 5 minutes environ.
 - Chaque jeu monte seul d'un palier (jusqu'à 5, puis 7, puis 10) après 3 réussites du premier coup d'affilée, et redescend après 2 erreurs d'affilée.
 - En cas d'erreur, le jeu montre la bonne démarche (on recompte ensemble) plutôt que de sanctionner.
-- 1 étoile par bonne réponse au premier essai, 10 étoiles = 1 joker, comme en classe. Les étoiles sont communes à tous les jeux.
+- Chaque bonne réponse du premier coup donne une étoile dorée à l'écran ; en fin de séance, 2 étoiles dorées = 1 étoile dans la tirelire, +1 en bonus si tout est réussi. 10 étoiles = 1 joker, comme en classe. Les étoiles sont communes à tous les jeux.
 - Espace parent (bouton 🔒 en bas à droite, protégé par un code à 4 chiffres) : réussite par nombre et par jeu. Les données restent sur la tablette.
 
 ## Ouvrir sur la tablette

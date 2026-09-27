@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Super Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Bangers&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  :root {
+    --ciel: #1E4FA8;
+    --ciel-clair: #3C74D6;
+    --eclair: #FFD23F;
+    --eclair-fonce: #E0A800;
+    --rouge: #E0463A;
+    --bd: "Bangers", "Impact", "Arial Black", sans-serif;
+  }
+  body { background: radial-gradient(circle at 30% 20%, var(--ciel-clair), var(--ciel) 70%); }
+  .titre-bd { font-family: var(--bd); letter-spacing: .04em; font-weight: 400; color: var(--eclair); text-shadow: 3px 3px 0 #0B2A66; margin: 0; }
+  #accueil { overflow-y: auto; align-items: center; gap: 16px; }
+  #accueil > * { width: min(100%, 1040px); flex: none; }
+  #accueil > .coin-parent { width: auto; }
+  #accueil { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .coin-parent { color: #DCE7FA; border-color: #7FA3E0; }
+  #accueil .accueil-haut .titre-bd { font-size: clamp(40px, 8vh, 66px); line-height: 1; }
+  #accueil .accueil-haut small { display: block; font-family: var(--police); font-size: 18px; color: #DCE7FA; text-shadow: none; letter-spacing: 0; }
+  .compteur { color: var(--blanc); }
+  .rond { color: var(--encre); }
+
+  /* Carte du héros */
+  .carte-heros {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    background: var(--blanc); border-radius: 24px; padding: 12px 18px;
+    box-shadow: 0 6px 0 #0B2A66;
+  }
+  .avatar {
+    width: 84px; height: 84px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 54px; line-height: 1;
+    border: 4px solid var(--blanc); box-shadow: 0 0 0 4px var(--eclair);
+    flex: none;
+  }
+  .carte-heros .nom { font-family: var(--bd); font-size: 34px; color: var(--ciel); letter-spacing: .04em; }
+  .medailles { display: flex; gap: 6px; flex-wrap: wrap; font-size: 30px; min-height: 36px; align-items: center; }
+  .medailles .vide { font-size: 16px; color: var(--encre-douce); }
+  .btn-costume { margin-left: auto; background: var(--lagon); border-radius: 16px; padding: 10px 16px; font-size: 18px; font-weight: 700; }
+
+  /* Carte des missions */
+  .missions { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .mission {
+    position: relative; background: var(--eclair); border-radius: 24px;
+    box-shadow: 0 7px 0 var(--eclair-fonce); padding: 14px 12px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .mission:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--eclair-fonce); }
+  .mission .num { position: absolute; top: 8px; left: 12px; font-family: var(--bd); font-size: 26px; color: #8A5A00; }
+  .mission .mechant { font-size: 68px; line-height: 1.1; }
+  .mission .nom { font-family: var(--bd); font-size: 26px; letter-spacing: .03em; color: #3A2A00; line-height: 1.05; }
+  .mission .etat { font-size: 16px; font-weight: 700; color: #6B4A00; }
+  .mission.fermee { background: #9FB3D6; box-shadow: 0 7px 0 #7890B8; }
+  .mission.fermee .mechant { filter: grayscale(1) brightness(.6); }
+  .mission.fermee .nom, .mission.fermee .etat, .mission.fermee .num { color: #3B4E72; }
+  .mission.vaincue .mechant { position: relative; }
+  .mission .medaille { position: absolute; top: 6px; right: 10px; font-size: 38px; }
+
+  /* Combat */
+  #jeu .scene { flex-direction: column; gap: 12px; padding: 10px 16px; background: var(--sable); }
+  .combat { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; flex: none; }
+  .perso { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .perso.mechant { flex-direction: row-reverse; text-align: right; }
+  .perso .avatar { width: clamp(58px, 11vh, 84px); height: clamp(58px, 11vh, 84px); font-size: clamp(36px, 7vh, 54px); }
+  .perso .avatar.mechant-av { background: #3B2A55; box-shadow: 0 0 0 4px var(--rouge); transition: transform .2s ease; }
+  .perso .infos { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+  .perso .qui { font-family: var(--bd); font-size: clamp(20px, 3.4vh, 28px); letter-spacing: .03em; color: var(--encre); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jauge { height: 18px; border-radius: 9px; background: #E6DCC4; overflow: hidden; }
+  .jauge i { display: block; height: 100%; border-radius: 9px; transition: width .5s ease; }
+  .jauge.energie i { background: linear-gradient(90deg, var(--eclair), #FF9F1C); }
+  .jauge.vie i { background: linear-gradient(90deg, #FF6B5B, var(--rouge)); margin-left: auto; }
+  .perso.mechant .jauge i { float: right; }
+  .vs { font-family: var(--bd); font-size: clamp(30px, 6vh, 46px); color: var(--rouge); flex: none; }
+  .touche-mechant { animation: frappe .5s ease; }
+  .rire { animation: rire .6s ease; }
+  @keyframes frappe { 0%,100% { transform: none; } 20% { transform: translateX(14px) rotate(8deg) scale(.9); filter: brightness(2); } 60% { transform: translateX(-6px) rotate(-4deg); } }
+  @keyframes rire { 0%,100% { transform: none; } 25% { transform: translateY(-10px) scale(1.12); } 50% { transform: translateY(0) scale(1); } 75% { transform: translateY(-6px) scale(1.06); } }
+  .pow {
+    position: absolute; top: 12%; right: 16%; font-family: var(--bd); font-size: clamp(50px, 11vh, 90px);
+    color: var(--eclair); -webkit-text-stroke: 3px var(--rouge); text-shadow: 4px 4px 0 var(--rouge);
+    pointer-events: none; animation: pow .8s ease forwards; z-index: 6;
+  }
+  @keyframes pow { 0% { transform: scale(.2) rotate(-15deg); opacity: 0; } 30% { transform: scale(1.15) rotate(-8deg); opacity: 1; } 100% { transform: scale(1) rotate(-8deg); opacity: 0; } }
+
+  .epreuve { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 30px; }
+  .epreuve .domaine { position: absolute; left: 18px; bottom: 12px; font-size: 15px; font-weight: 700; color: var(--encre-douce); background: var(--blanc); border-radius: 12px; padding: 4px 10px; }
+  .gros { font-size: clamp(70px, 17vh, 140px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; display: flex; gap: .25em; align-items: center; }
+  .gros .trou { color: var(--galet); border: 5px dashed var(--galet); border-radius: 18px; padding: 0 .2em; }
+  .grand-emoji { font-size: clamp(90px, 22vh, 170px); line-height: 1; }
+  .mot-a-lire { font-size: clamp(70px, 17vh, 140px); font-weight: 700; line-height: 1; }
+  .syl-a { color: var(--mer); } .syl-b { color: var(--corail-fonce); } .muette { color: var(--galet); }
+  .cadres { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .cadre { display: grid; grid-template-columns: repeat(5, var(--c)); gap: 5px; --c: clamp(34px, 7vh, 60px); background: var(--blanc); padding: 8px; border-radius: 14px; }
+  .cadres.trois .cadre { --c: clamp(26px, 5vh, 44px); }
+  .case { width: var(--c); height: var(--c); border: 3px solid var(--encre-douce); border-radius: 9px; display: grid; place-items: center; }
+  .case .pt { width: 70%; height: 70%; border-radius: 50%; background: var(--corail); }
+  .case .pt.bleu { background: var(--mer); }
+  .ecoute-grande { width: clamp(120px, 24vh, 180px); height: clamp(120px, 24vh, 180px); border-radius: 50%; background: var(--ciel); color: var(--blanc); display: grid; place-items: center; box-shadow: 0 7px 0 #0B2A66; }
+  .ecoute-grande svg { width: 50%; height: 50%; }
+  .rep.lettre { font-size: clamp(50px, 10vh, 84px); }
+  .rep.emoji { font-size: clamp(54px, 11vh, 90px); }
+  .rep.couleur { padding: 0; min-width: clamp(96px, 15vw, 140px); }
+  .rep.couleur span { width: 70%; height: 70%; border-radius: 50%; display: block; border: 3px solid rgba(0,0,0,.15); }
+  .rep .points { font-size: clamp(28px, 5.5vh, 42px); letter-spacing: 5px; color: var(--mer); }
+  .rep.jour { font-size: clamp(24px, 4.5vh, 36px); color: var(--blanc); border: 0; min-width: clamp(140px, 20vw, 210px); }
+  .rep.lieu { flex-direction: column; gap: 2px; font-size: clamp(17px, 2.8vh, 22px); min-width: clamp(120px, 16vw, 160px); }
+  .rep.lieu span { font-size: clamp(36px, 7vh, 56px); line-height: 1; }
+
+  /* Fin de mission */
+  #fin { background: transparent; }
+  #fin .titre { color: var(--eclair); font-family: var(--bd); font-weight: 400; letter-spacing: .04em; text-shadow: 3px 3px 0 #0B2A66; font-size: clamp(46px, 9vh, 76px); }
+  #fin .fin-texte { color: var(--blanc); }
+  .medaille-gagnee { font-size: clamp(80px, 18vh, 130px); line-height: 1; animation: hop .7s ease 2; }
+
+  /* Costume */
+  .choix-costume { display: flex; flex-direction: column; gap: 18px; align-items: center; }
+  .rangee { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .rangee button { width: 96px; height: 96px; border-radius: 50%; font-size: 58px; display: grid; place-items: center; background: var(--blanc); border: 5px solid transparent; }
+  .rangee button.choisi { border-color: var(--eclair); transform: scale(1.08); }
+  .rangee.capes button { font-size: 0; }
+  #costume { align-items: center; justify-content: center; gap: 22px; overflow-y: auto; }
+  #costume .avatar { width: 130px; height: 130px; font-size: 86px; }
+  .parent { background: var(--lagon); }
+</style>
+</head>
+<body>
+
+<!-- ============ CARTE DES MISSIONS ============ -->
+<section id="accueil" class="ecran">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre-bd">Super Solal <small>Sauve la ville en répondant juste !</small></h1>
+    </div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="carte-heros">
+    <div class="avatar" id="avatar-carte"></div>
+    <div>
+      <div class="nom">Super Solal</div>
+      <div class="medailles" id="medailles"></div>
+    </div>
+    <button class="btn-costume" id="btn-costume">👕 Mon costume</button>
+  </div>
+  <div class="missions" id="missions"></div>
+  <button class="coin-parent" id="btn-parent">🔒 Espace parent</button>
+</section>
+
+<!-- ============ COSTUME ============ -->
+<section id="costume" class="ecran" hidden>
+  <h1 class="titre-bd" style="font-size:clamp(40px,8vh,64px)">Choisis ton héros</h1>
+  <div class="avatar" id="avatar-apercu"></div>
+  <div class="choix-costume">
+    <div class="rangee" id="choix-avatars"></div>
+    <div class="rangee capes" id="choix-capes"></div>
+  </div>
+  <button class="rep large vert" id="btn-costume-ok">C'est moi !</button>
+</section>
+
+<!-- ============ MISSION ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN DE MISSION ============ -->
+<section id="fin" class="ecran fin" hidden>
+  <h1 class="titre" id="fin-titre">Victoire !</h1>
+  <div class="medaille-gagnee" id="fin-medaille"></div>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p class="fin-texte" id="fin-texte"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Rejouer</button>
+    <button class="rep large gris" id="btn-accueil">Les missions</button>
+  </div>
+</section>
+
+<!-- ============ PARENT ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent · Super Solal</h2>
+  </div>
+  <p>Chaque mission est un combat en 6 épreuves qui mélangent les domaines : nombres, calcul, sons et syllabes, lecture, anglais, jours, questionner le monde. Chaque bonne réponse du premier coup retire un cœur au méchant ; il faut en retirer au moins 4 sur 6 pour gagner la médaille et débloquer la mission suivante. Les missions deviennent plus difficiles au fil de la carte.</p>
+  <p>Réussite au premier essai, par domaine :</p>
+  <div class="legende">
+    <span><i style="background:#CDEBD8"></i>80 % et plus</span>
+    <span><i style="background:#FBE3BE"></i>50 à 79 %</span>
+    <span><i style="background:#F6D0C6"></i>moins de 50 %</span>
+  </div>
+  <div id="stats" class="puces"></div>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte" id="btn-debloquer">Débloquer toutes les missions</button>
+    <button class="btn-texte danger" id="btn-reset">Recommencer l'aventure</button>
+  </div>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, $$, hasard, choisir, melanger, pause, dire, enLettres, lire, ecrire } = Solal;
+
+  /* ---------- Le héros ---------- */
+  const AVATARS = ['🦸‍♂️', '🦸🏻‍♂️', '🦸🏽‍♂️', '🦸🏿‍♂️', '🦸‍♀️', '🥷'];
+  const CAPES = ['#E0463A', '#2F6FD0', '#3E9E48', '#8A4FB8', '#F28C28', '#222222'];
+  const CLE_HEROS = 'solal-heros-profil-v1';
+  const profil = lire(CLE_HEROS, () => ({ avatar: AVATARS[0], cape: CAPES[0], choisi: false, victoires: {}, ouvert: 1 }));
+  const sauverProfil = () => ecrire(CLE_HEROS, profil);
+  const peindreAvatar = el => { el.textContent = profil.avatar; el.style.background = profil.cape; };
+
+  /* ---------- Les méchants et leurs missions ---------- */
+  const MISSIONS = [
+    { id: 'm1', mechant: '🤖', nom: 'Robot Rouillé', medaille: '🔧', d: 0,
+      histoire: "Alerte ! Le Robot Rouillé a éteint toutes les lumières de la ville. Super Solal, réponds juste pour lui envoyer tes rayons !",
+      recette: ['compte', 'syllabe', 'anglais', 'compte', 'lire', 'jour'] },
+    { id: 'm2', mechant: '👾', nom: 'Glouton des Lettres', medaille: '📚', d: 0,
+      histoire: "Oh non ! Le Glouton des Lettres a mangé les livres de la bibliothèque. Aide-moi à retrouver les sons et les mots !",
+      recette: ['syllabe', 'lire', 'syllabes', 'syllabe', 'lire', 'anglais'] },
+    { id: 'm3', mechant: '🦹', nom: 'Docteur Chaos', medaille: '🧮', d: 1,
+      histoire: "Le Docteur Chaos a mélangé tous les nombres de la ville ! Seul un super héros qui sait calculer peut l'arrêter.",
+      recette: ['addition', 'compte', 'complement', 'addition', 'jour', 'monde'] },
+    { id: 'm4', mechant: '🐙', nom: 'Pieuvre Géante', medaille: '🌊', d: 1,
+      histoire: "Une Pieuvre Géante bloque le port avec ses grands bras ! Chaque bonne réponse lui fait lâcher un bateau.",
+      recette: ['monde', 'syllabe', 'addition', 'lire', 'anglais', 'complement'] },
+    { id: 'm5', mechant: '🌪️', nom: 'Tornado', medaille: '🌀', d: 2,
+      histoire: "Tornado souffle sur la ville et fait tout tourner ! Garde la tête froide et réponds juste pour le calmer.",
+      recette: ['compte', 'addition', 'syllabes', 'lire', 'jour', 'complement'] },
+    { id: 'm6', mechant: '🐉', nom: 'Dragon des Nombres', medaille: '🏆', d: 2,
+      histoire: "Voici le plus terrible de tous : le Dragon des Nombres ! Il crache des calculs de feu. Courage, Super Solal !",
+      recette: ['addition', 'complement', 'compte', 'addition', 'syllabe', 'lire'] },
+    { id: 'm7', mechant: '👻', nom: 'Mission surprise', medaille: '🌟', d: 2, surprise: true,
+      histoire: "Mission surprise ! Un méchant mystère attaque la ville. Tout peut arriver !",
+      recette: null }
+  ];
+  const DOMAINES = { compte: 'Nombres', addition: 'Calcul', complement: 'Compléments à 10', syllabe: 'Sons', syllabes: 'Syllabes', lire: 'Lecture', anglais: 'Anglais', jour: 'Jours', monde: 'Le monde' };
+  const TYPES = Object.keys(DOMAINES);
+
+  /* ---------- Contenus des épreuves ---------- */
+  const CONSONNES = [['l', 'r', 'm'], ['l', 'r', 'm', 's', 'f'], ['l', 'r', 'm', 's', 'f', 'ch', 'v', 'n', 'j']];
+  const VOYELLES = [['a', 'i', 'o'], ['a', 'i', 'o', 'u', 'é'], ['a', 'i', 'o', 'u', 'é', 'ou']];
+  const A_LIRE = [
+    [{ m: 'la|ma', e: '🦙', n: 'un lama' }, { m: 'vé|lo', e: '🚲', n: 'un vélo' }, { m: 'mo|to', e: '🏍️', n: 'une moto' },
+     { m: 'so|fa', e: '🛋️', n: 'un sofa' }, { m: 'mur', e: '🧱', n: 'un mur' }, { m: 'fil', e: '🧵', n: 'un fil' }, { m: 'ro|bo(t)', e: '🤖', n: 'un robot' }],
+    [{ m: 'lu|n(e)', e: '🌙', n: 'la lune' }, { m: 'fé(e)', e: '🧚', n: 'une fée' }, { m: 'na|vi|r(e)', e: '🚢', n: 'un navire' },
+     { m: 'cha(t)', e: '🐱', n: 'un chat' }, { m: 'va|ch(e)', e: '🐄', n: 'une vache' }, { m: 'si|rè|n(e)', e: '🧜‍♀️', n: 'une sirène' }],
+    [{ m: 'lou(p)', e: '🐺', n: 'un loup' }, { m: 'sou|ri(s)', e: '🐭', n: 'une souris' }, { m: 'mou|ch(e)', e: '🪰', n: 'une mouche' },
+     { m: 'che|val', e: '🐴', n: 'un cheval' }, { m: 'four|mi', e: '🐜', n: 'une fourmi' }, { m: 'jour|nal', e: '📰', n: 'un journal' }, { m: 'cho|co|la(t)', e: '🍫', n: 'du chocolat' }]
+  ];
+  const SYLLABES_MOTS = [
+    { m: 'chat', e: '🐱', s: ['chat'] }, { m: 'loup', e: '🐺', s: ['loup'] }, { m: 'lapin', e: '🐰', s: ['la', 'pin'] },
+    { m: 'vélo', e: '🚲', s: ['vé', 'lo'] }, { m: 'bateau', e: '⛵', s: ['ba', 'to'] }, { m: 'dinosaure', e: '🦕', s: ['di', 'no', 'sor'] },
+    { m: 'éléphant', e: '🐘', s: ['é', 'lé', 'fan'] }, { m: 'crocodile', e: '🐊', s: ['cro', 'co', 'dile'] }, { m: 'papillon', e: '🦋', s: ['pa', 'pi', 'yon'] },
+    { m: 'hélicoptère', e: '🚁', s: ['hé', 'li', 'cop', 'tère'] }, { m: 'rhinocéros', e: '🦏', s: ['ri', 'no', 'cé', 'ros'] },
+    { m: 'caméléon', e: '🦎', s: ['ca', 'mé', 'lé', 'on'] }, { m: 'hippopotame', e: '🦛', s: ['i', 'po', 'po', 'tam'] }
+  ];
+  const COULEURS = [
+    { en: 'red', c: '#E0463A' }, { en: 'blue', c: '#2F6FD0' }, { en: 'green', c: '#3E9E48' }, { en: 'yellow', c: '#F6CF2F' },
+    { en: 'orange', c: '#F28C28' }, { en: 'pink', c: '#F29BC0' }, { en: 'purple', c: '#8A4FB8' }, { en: 'black', c: '#222222' }
+  ];
+  const SEMAINE = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  const COULEUR_JOUR = { lundi: '#E0674A', mardi: '#D9951A', mercredi: '#3E9E68', jeudi: '#2F7FA3', vendredi: '#8466B0', samedi: '#D66C98', dimanche: '#6F8394' };
+  const LIEUX = { ferme: { e: '🚜', n: 'la ferme', a: 'à la ferme' }, mer: { e: '🌊', n: 'la mer', a: 'dans la mer' }, foret: { e: '🌲', n: 'la forêt', a: 'dans la forêt' }, savane: { e: '🌴', n: 'la savane', a: 'dans la savane' } };
+  const ANIMAUX = [
+    { e: '🐄', n: 'la vache', l: 'ferme' }, { e: '🐷', n: 'le cochon', l: 'ferme' }, { e: '🐑', n: 'le mouton', l: 'ferme' },
+    { e: '🐳', n: 'la baleine', l: 'mer' }, { e: '🦀', n: 'le crabe', l: 'mer' }, { e: '🐬', n: 'le dauphin', l: 'mer' },
+    { e: '🦊', n: 'le renard', l: 'foret' }, { e: '🦉', n: 'le hibou', l: 'foret' }, { e: '🦔', n: 'le hérisson', l: 'foret' },
+    { e: '🦁', n: 'le lion', l: 'savane' }, { e: '🦒', n: 'la girafe', l: 'savane' }, { e: '🦓', n: 'le zèbre', l: 'savane' }
+  ];
+
+  const Maj = t => t.charAt(0).toUpperCase() + t.slice(1);
+  const motPlat = m => m.replace(/[|()]/g, '');
+  const motHTML = m => m.split('|').map((syl, i) =>
+    `<span class="${i % 2 ? 'syl-b' : 'syl-a'}">${syl.replace(/\(([^)]*)\)/g, '<span class="muette">$1</span>')}</span>`).join('');
+  function nombresProches(n, min, max, nb = 4) {
+    const tous = Array.from({ length: max - min + 1 }, (_, i) => min + i).filter(v => v !== n);
+    const pool = new Set();
+    const inv = n > 10 ? +String(n).split('').reverse().join('') : 0;
+    if (inv && inv !== n && inv >= min && inv <= max) pool.add(inv);
+    melanger(tous.filter(v => Math.abs(v - n) <= 3)).forEach(v => pool.add(v));
+    melanger(tous).forEach(v => pool.add(v));
+    return [n, ...[...pool].slice(0, nb - 1)].sort((a, b) => a - b);
+  }
+  function htmlPoints(n, bleus = 0) {
+    const nb = Math.max(1, Math.ceil((n + bleus) / 10));
+    let html = '';
+    for (let i = 0; i < nb; i++) {
+      const r = Math.max(0, Math.min(10, n - i * 10));
+      const b = Math.max(0, Math.min(10 - r, n + bleus - i * 10 - r));
+      html += `<div class="cadre">${Array.from({ length: 10 }, (_, k) =>
+        `<span class="case">${k < r ? '<span class="pt"></span>' : k < r + b ? '<span class="pt bleu"></span>' : ''}</span>`).join('')}</div>`;
+    }
+    return `<div class="cadres ${nb === 3 ? 'trois' : ''}">${html}</div>`;
+  }
+
+  /* ---------- Combat : le héros contre le méchant ---------- */
+  let mission = null;
+  function dessinerCombat(m) {
+    const coups = m.jeu.coups || 0;
+    return `<div class="combat">
+      <div class="perso"><div class="avatar" style="background:${profil.cape}">${profil.avatar}</div>
+        <div class="infos"><span class="qui">Super Solal</span><div class="jauge energie"><i style="width:${coups / 6 * 100}%"></i></div></div></div>
+      <div class="vs">VS</div>
+      <div class="perso mechant"><div class="avatar mechant-av" id="av-mechant">${mission.mechant}</div>
+        <div class="infos"><span class="qui">${mission.nom}</span><div class="jauge vie"><i style="width:${(6 - coups) / 6 * 100}%"></i></div></div></div>
+    </div>`;
+  }
+  function scene(m, type, contenu) {
+    $('#scene').innerHTML = `${dessinerCombat(m)}<div class="epreuve">${contenu}</div><span class="domaine" style="position:absolute;left:18px;bottom:12px;font-size:15px;font-weight:700;color:var(--encre-douce);background:var(--blanc);border-radius:12px;padding:4px 10px">${DOMAINES[type]}</span>`;
+  }
+  async function frapper(m) {
+    if (m.jeu.essais !== 1) return;
+    m.jeu.coups = (m.jeu.coups || 0) + 1;
+    const av = $('#av-mechant');
+    if (av) { av.classList.remove('touche-mechant'); void av.offsetWidth; av.classList.add('touche-mechant'); }
+    $('#scene').insertAdjacentHTML('beforeend', `<div class="pow">${choisir(['POW !', 'BAM !', 'ZAP !', 'BOUM !', 'PAF !'])}</div>`);
+    const c = m.jeu.coups;
+    $$('.jauge.energie i').forEach(i => { i.style.width = `${c / 6 * 100}%`; });
+    $$('.jauge.vie i').forEach(i => { i.style.width = `${(6 - c) / 6 * 100}%`; });
+    await pause(450);
+  }
+  async function rire() {
+    const av = $('#av-mechant');
+    if (av) { av.classList.remove('rire'); void av.offsetWidth; av.classList.add('rire'); }
+    await dire(choisir(['Ha ha ha !', 'Hi hi hi, raté !', 'Ho ho ho !']), { vitesse: 1 });
+  }
+  /* Options de réponse communes : frappe si juste du premier coup, rire du méchant si faux. */
+  const choix = (m, options, cible, reglages) => m.choix(options, {
+    cible,
+    avantBravo: () => frapper(m),
+    ...reglages,
+    aider: async v => { await rire(); if (reglages.aider) await reglages.aider(v); }
+  });
+
+  /* ---------- Les épreuves ---------- */
+  const EPREUVES = {
+    compte(m, d) {
+      const max = [10, 20, 30][d];
+      const n = (d === 0 ? 1 : 6) + hasard(max - (d === 0 ? 1 : 6) + 1);
+      scene(m, 'compte', `<div>${htmlPoints(n)}</div>`);
+      choix(m, nombresProches(n, 1, max), n, {
+        dit: v => enLettres(v),
+        aider: async () => { await dire(`Il y a ${enLettres(n)} points. Compte les boîtes pleines de dix, puis les autres.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} Il y a ${enLettres(n)} points.`
+      });
+      return 'Combien de points ?';
+    },
+    addition(m, d) {
+      const max = [10, 10, 20][d];
+      let a, b, k = 0;
+      do { a = 1 + hasard(max - 1); b = 1 + hasard(9); k++; } while ((a + b > max || (d === 2 && a + b <= 10)) && k < 200);
+      const s = a + b;
+      scene(m, 'addition', `<div class="gros">${a} <span>+</span> ${b} <span>=</span> <span class="trou">?</span></div>${d === 0 ? htmlPoints(a, b) : ''}`);
+      choix(m, nombresProches(s, 2, max), s, {
+        dit: v => enLettres(v),
+        aider: async () => { await dire(`${enLettres(a)} plus ${enLettres(b)}, ça fait ${enLettres(s)}.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} ${enLettres(a)} plus ${enLettres(b)}, ça fait ${enLettres(s)}.`
+      });
+      return `${enLettres(a)} plus ${enLettres(b)}, ça fait combien ?`;
+    },
+    complement(m, d) {
+      const n = 1 + hasard(9), manque = 10 - n;
+      scene(m, 'complement', `<div class="gros">${n} <span>+</span> <span class="trou">?</span> <span>=</span> 10</div>${d < 2 ? htmlPoints(n) : ''}`);
+      choix(m, nombresProches(manque, 1, 9), manque, {
+        dit: v => enLettres(v),
+        aider: async () => { await dire(`${enLettres(n)} et ${enLettres(manque)}, ça fait dix.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} ${enLettres(n)} et ${enLettres(manque)}, ça fait dix.`
+      });
+      return `${enLettres(n)}, pour aller à dix, combien il manque ?`;
+    },
+    syllabe(m, d) {
+      const cs = CONSONNES[d], vs = VOYELLES[d];
+      const c = choisir(cs), v = choisir(vs), x = c + v;
+      const autres = new Set();
+      melanger(vs.filter(y => y !== v)).slice(0, 2).forEach(y => autres.add(c + y));
+      melanger(cs.filter(y => y !== c)).forEach(y => { if (autres.size < 3) autres.add(y + v); });
+      const options = melanger([x, ...autres]);
+      scene(m, 'syllabe', `<button class="ecoute-grande" id="ecoute-e" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`);
+      $('#ecoute-e').addEventListener('click', () => { if (!m.occupe) m.consigne(m.jeu.consigne); });
+      choix(m, options, x, {
+        classe: 'lettre',
+        dit: y => y,
+        aider: async y => { await dire(`Ça, c'est « ${y} ». Trouve « ${x} ».`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} C'est « ${x} ».`
+      });
+      return `Trouve « ${x} ».`;
+    },
+    syllabes(m, d) {
+      const pool = SYLLABES_MOTS.filter(w => d === 0 ? w.s.length <= 3 : w.s.length >= 2);
+      const w = choisir(pool);
+      const n = w.s.length;
+      scene(m, 'syllabes', `<div class="grand-emoji">${w.e}</div><div class="mot-a-lire" style="font-size:clamp(36px,7vh,56px);color:var(--encre-douce)">${w.m}</div>`);
+      choix(m, [1, 2, 3, 4], n, {
+        rendu: k => `<span class="points">${'●'.repeat(k)}</span>`,
+        dit: k => enLettres(k),
+        aider: async () => { for (const syl of w.s) { await dire(syl, { vitesse: 0.75 }); await pause(200); } await dire(`Il y a ${enLettres(n)} syllabe${n > 1 ? 's' : ''}.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} ${w.m} : ${enLettres(n)} syllabe${n > 1 ? 's' : ''}.`
+      });
+      return `Combien de syllabes dans « ${w.m} » ?`;
+    },
+    lire(m, d) {
+      const w = choisir(A_LIRE[d]);
+      const autres = melanger(A_LIRE.flat().filter(x => x.e !== w.e)).slice(0, 2);
+      scene(m, 'lire', `<div class="mot-a-lire">${motHTML(w.m)}</div>`);
+      choix(m, melanger([w, ...autres]), w, {
+        classe: 'emoji',
+        rendu: x => x.e,
+        dit: x => x.n,
+        aider: async x => { await dire(`Ça, c'est ${x.n}. Lis bien le mot.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} C'est écrit « ${motPlat(w.m)} ».`
+      });
+      return 'Lis le mot tout seul, et trouve la bonne image.';
+    },
+    anglais(m, d) {
+      const pool = COULEURS.slice(0, d === 0 ? 4 : 8);
+      const x = choisir(pool);
+      const options = melanger([x, ...melanger(pool.filter(y => y !== x)).slice(0, 3)]);
+      scene(m, 'anglais', `<button class="ecoute-grande" id="ecoute-e" style="background:#8466B0;box-shadow:0 7px 0 #5E4785" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`);
+      const jouer = async () => { m.occupe = true; await dire('En anglais, trouve la couleur :'); await dire(x.en, { langue: 'en', vitesse: 0.8 }); m.occupe = false; };
+      m.jeu.rejouer = jouer;
+      $('#ecoute-e').addEventListener('click', () => { if (!m.occupe) jouer(); });
+      choix(m, options, x, {
+        classe: 'couleur',
+        rendu: y => `<span style="background:${y.c}"></span>`,
+        dit: () => '',
+        aider: async () => { await dire('Écoute encore.'); await dire(x.en, { langue: 'en', vitesse: 0.8 }); },
+        bravo: () => choisir(Solal.BRAVOS)
+      });
+      return jouer;
+    },
+    jour(m, d) {
+      const repere = choisir(SEMAINE);
+      const avant = d > 0 && Math.random() < 0.5;
+      const i = SEMAINE.indexOf(repere);
+      const cible = SEMAINE[(i + (avant ? 6 : 1)) % 7];
+      const options = melanger([cible, SEMAINE[(i + (avant ? 1 : 6)) % 7], choisir(SEMAINE.filter(j => j !== cible && j !== repere && j !== SEMAINE[(i + (avant ? 1 : 6)) % 7]))]);
+      scene(m, 'jour', `<div class="grand-emoji">📅</div>`);
+      choix(m, options, cible, {
+        classe: 'jour',
+        style: j => `background:${COULEUR_JOUR[j]};box-shadow:0 7px 0 rgba(0,0,0,.25)`,
+        dit: j => j,
+        aider: async () => { await dire(`${avant ? 'Avant' : 'Après'} ${repere}, il y a ${cible}.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} ${avant ? 'Avant' : 'Après'} ${repere}, c'est ${cible}.`
+      });
+      return `Quel jour vient ${avant ? 'avant' : 'après'} ${repere} ?`;
+    },
+    monde(m, d) {
+      const lieux = d === 0 ? ['ferme', 'mer', 'foret'] : Object.keys(LIEUX);
+      const x = choisir(ANIMAUX.filter(a => lieux.includes(a.l)));
+      scene(m, 'monde', `<div class="grand-emoji">${x.e}</div>`);
+      choix(m, lieux, x.l, {
+        classe: 'lieu',
+        rendu: k => `<span>${LIEUX[k].e}</span>${LIEUX[k].n}`,
+        dit: k => LIEUX[k].n,
+        aider: async () => { await dire(`${Maj(x.n)} vit ${LIEUX[x.l].a}.`); },
+        bravo: () => `${choisir(Solal.BRAVOS)} ${Maj(x.n)} vit ${LIEUX[x.l].a}.`
+      });
+      return `Où vit ${x.n} ?`;
+    }
+  };
+
+  /* ---------- Une mission = 6 épreuves ---------- */
+  function jeuMission(mi) {
+    return {
+      parSeance: 6,
+      paliers: 1,
+      async preparer(m) {
+        mission = mi;
+        if (m.jeu.num === 1) {
+          m.jeu.coups = 0;
+          m.jeu.recette = mi.recette || melanger([...TYPES]).slice(0, 6);
+        }
+        const type = m.jeu.recette[m.jeu.num - 1];
+        m.jeu.cle = DOMAINES[type];
+        const consigne = EPREUVES[type](m, mi.d);
+        if (m.jeu.num === 1) {
+          m.occupe = true;
+          await dire(mi.histoire);
+          m.occupe = false;
+          if ($('#jeu').hidden) return;
+        }
+        if (typeof consigne === 'function') await consigne();
+        else m.consigne(consigne);
+      },
+      fin(m, { dorees, total, gain }) {
+        const coups = m.jeu.coups || 0;
+        const gagne = coups >= 4;
+        const idx = MISSIONS.indexOf(mi);
+        const dejaGagnee = !!profil.victoires[mi.id];
+        if (gagne) {
+          profil.victoires[mi.id] = true;
+          profil.ouvert = Math.max(profil.ouvert, Math.min(MISSIONS.length, idx + 2));
+          sauverProfil();
+        }
+        $('#fin-titre').textContent = gagne ? 'Victoire !' : 'Il s\'est enfui !';
+        $('#fin-medaille').textContent = gagne ? mi.medaille : mi.mechant;
+        const s = x => (x > 1 ? 's' : '');
+        $('#fin-texte').innerHTML = `${coups} coup${s(coups)} réussi${s(coups)} sur 6<br><strong>+ ${gain} étoile${s(gain)} dans ta tirelire</strong>`;
+        const etoiles = gain === 0 ? '' : ` Tu gagnes ${gain === 1 ? 'une étoile' : enLettres(gain) + ' étoiles'}.`;
+        const suite = gagne && !dejaGagnee && idx + 1 < MISSIONS.length ? ' Une nouvelle mission est débloquée !' : '';
+        return gagne
+          ? `Victoire ! Bravo Super Solal, ${mi.surprise ? 'le méchant mystère' : 'le ' + mi.nom} est vaincu ! Tu gagnes la médaille.${etoiles}${suite}`
+          : `Oh non, ${mi.surprise ? 'le méchant' : 'le ' + mi.nom} s'est enfui ! Il faut au moins quatre bonnes réponses du premier coup. On réessaie ?${etoiles}`;
+      }
+    };
+  }
+  const JEUX = Object.fromEntries(MISSIONS.map(mi => [mi.id, jeuMission(mi)]));
+  const m = Solal.moteur({ cle: 'solal-heros-v1', jeux: JEUX });
+
+  /* ---------- Carte des missions ---------- */
+  function afficherCarte() {
+    peindreAvatar($('#avatar-carte'));
+    const med = MISSIONS.filter(mi => profil.victoires[mi.id]).map(mi => `<span title="${mi.nom}">${mi.medaille}</span>`).join('');
+    $('#medailles').innerHTML = med || '<span class="vide">Pas encore de médaille : lance ta première mission !</span>';
+    $('#missions').innerHTML = MISSIONS.map((mi, i) => {
+      const ouverte = i < profil.ouvert;
+      const vaincue = profil.victoires[mi.id];
+      const etat = vaincue ? 'Vaincu ! Rejouer' : ouverte ? 'À toi de jouer !' : 'Bloquée';
+      return `<button class="mission ${ouverte ? '' : 'fermee'} ${vaincue ? 'vaincue' : ''}" data-mission="${mi.id}" data-i="${i}">
+        <span class="num">${i + 1}</span>${vaincue ? `<span class="medaille">${mi.medaille}</span>` : ''}
+        <span class="mechant">${ouverte ? mi.mechant : '🔒'}</span>
+        <span class="nom">${ouverte ? mi.nom : '???'}</span>
+        <span class="etat">${etat}</span></button>`;
+    }).join('');
+    $$('.mission').forEach(b => b.addEventListener('click', () => {
+      const i = +b.dataset.i;
+      if (i >= profil.ouvert) { dire("Cette mission est encore bloquée. Gagne d'abord la mission d'avant !"); return; }
+      m.lancer(b.dataset.mission);
+    }));
+    Solal.majTresor();
+  }
+
+  /* ---------- Costume ---------- */
+  function ouvrirCostume() {
+    Solal.montrer('costume');
+    const dessiner = () => {
+      peindreAvatar($('#avatar-apercu'));
+      $('#choix-avatars').innerHTML = AVATARS.map(a => `<button class="${a === profil.avatar ? 'choisi' : ''}" data-a="${a}">${a}</button>`).join('');
+      $('#choix-capes').innerHTML = CAPES.map(c => `<button class="${c === profil.cape ? 'choisi' : ''}" data-c="${c}" style="background:${c}" aria-label="Couleur de cape"></button>`).join('');
+      $$('#choix-avatars button').forEach(b => b.addEventListener('click', () => { profil.avatar = b.dataset.a; dessiner(); }));
+      $$('#choix-capes button').forEach(b => b.addEventListener('click', () => { profil.cape = b.dataset.c; dessiner(); }));
+    };
+    dessiner();
+    dire('Choisis ton héros et la couleur de ta cape.');
+  }
+  $('#btn-costume').addEventListener('click', ouvrirCostume);
+  $('#btn-costume-ok').addEventListener('click', () => {
+    profil.choisi = true;
+    sauverProfil();
+    Solal.montrer('accueil');
+    afficherCarte();
+    dire('Super Solal est prêt ! Choisis une mission.');
+  });
+
+  // Les boutons de retour du moteur ramènent à la carte : on la redessine.
+  ['#btn-maison', '#btn-accueil'].forEach(sel => $(sel).addEventListener('click', afficherCarte));
+
+  /* ---------- Espace parent ---------- */
+  function afficherParent() {
+    const tout = {};
+    Object.values(m.etat.stats).forEach(s => Object.entries(s).forEach(([k, [ok, tot]]) => {
+      tout[k] = tout[k] || [0, 0]; tout[k][0] += ok; tout[k][1] += tot;
+    }));
+    $('#stats').innerHTML = Object.values(DOMAINES).map(k => {
+      const v = tout[k];
+      if (!v) return `<span class="puce"><b>${k}</b>–</span>`;
+      const t = v[0] / v[1];
+      return `<span class="puce ${t >= 0.8 ? 'vert' : t >= 0.5 ? 'orange' : 'rouge'}"><b>${k}</b>${v[0]}/${v[1]}</span>`;
+    }).join('');
+    $('#btn-reset').textContent = "Recommencer l'aventure";
+    $('#btn-reset').dataset.confirme = '';
+    Solal.montrer('parent');
+  }
+  Solal.appuiLong($('#btn-parent'), afficherParent);
+  $('#btn-parent-retour').addEventListener('click', () => { Solal.montrer('accueil'); afficherCarte(); });
+  $('#btn-debloquer').addEventListener('click', () => { profil.ouvert = MISSIONS.length; sauverProfil(); Solal.montrer('accueil'); afficherCarte(); });
+  $('#btn-reset').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = 'Confirmer : effacer les médailles'; return; }
+    profil.victoires = {}; profil.ouvert = 1; sauverProfil(); m.effacer();
+    Solal.montrer('accueil'); afficherCarte();
+  });
+
+  afficherCarte();
+  if (!profil.choisi) ouvrirCostume();
+})();
+</script>
+</body>
+</html>

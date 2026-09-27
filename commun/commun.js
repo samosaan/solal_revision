@@ -247,9 +247,9 @@
         m.noter(true);
         j.resultats.push(etoile ? 'etoile' : 'fait');
         if (etoile) {
+          // Étoile dorée à l'écran ; la tirelire est remplie à la fin de la séance.
           j.gagnees++;
           popEtoile(true);
-          if (gagnerEtoile()) texte += ' Tu as gagné un joker !';
         }
         etat.serie[j.id]++;
         etat.ratees[j.id] = 0;
@@ -318,18 +318,36 @@
       }));
     };
 
+    /* Gains de la séance : 1 étoile pour 2 étoiles dorées, +1 si tout est réussi du premier coup.
+       Pour un rituel d'une seule question (Chaque jour compte), l'étoile dorée compte telle quelle. */
+    const gainSeance = (dorees, total) => total <= 2 ? dorees : Math.floor(dorees / 2) + (dorees === total ? 1 : 0);
+
     m.fin = () => {
       montrer('fin');
       const n = m.jeu.gagnees;
       const res = m.jeu.resultats;
+      const total = res.length;
       const erreurs = res.filter(r => r === 'aide').length;
+      const gain = gainSeance(n, total);
+      let joker = false;
+      for (let i = 0; i < gain; i++) if (gagnerEtoile()) joker = true;
       $('#fin-etoiles').innerHTML = res.map((r, i) =>
         `<svg class="etoile-svg ${r === 'aide' ? 'grise' : ''}" style="animation-delay:${i * 0.12}s"><use href="#i-etoile"/></svg>`).join('');
-      $('#fin-texte').textContent = res.length > 1 ? `${n} étoile${n > 1 ? 's' : ''} sur ${res.length}` : (n ? '1 étoile gagnée' : 'Tu as bien travaillé.');
-      const dit = n === 0 ? 'Tu as bien travaillé.' : `Tu as gagné ${n === 1 ? 'une étoile' : enLettres(n) + ' étoiles'}.`;
-      const gris = erreurs === 0 ? (res.length > 1 ? ' Tout du premier coup !' : '')
-        : ` Les étoiles grises, ce sont les questions où tu t'es trompé. La prochaine fois, tu feras encore mieux !`;
-      dire(`${erreurs === 0 ? 'Bravo Solal !' : 'Bien travaillé, Solal !'} ${dit}${gris} Tu peux faire une pause.`);
+      const s = x => (x > 1 ? 's' : '');
+      $('#fin-texte').innerHTML = total > 2
+        ? `${n} étoile${s(n)} dorée${s(n)} sur ${total}<br><strong>+ ${gain} étoile${s(gain)} dans ta tirelire</strong>${n === total && total > 2 ? ' (dont 1 en bonus)' : ''}`
+        : (gain ? '<strong>+ 1 étoile dans ta tirelire</strong>' : 'Tu as bien travaillé.');
+      const etoilesDites = x => x === 1 ? 'une étoile' : `${enLettres(x)} étoiles`;
+      let dit;
+      if (total <= 2) dit = gain ? 'Tu gagnes une étoile pour ta tirelire.' : 'Tu as bien travaillé.';
+      else if (n === 0) dit = "Pas d'étoile dorée cette fois. Tu vas y arriver !";
+      else dit = `Tu as ${etoilesDites(n)} dorée${s(n)}. Ça te rapporte ${gain ? etoilesDites(gain) : 'zéro étoile'} pour ta tirelire.`;
+      const bonus = n === total && total > 2 ? " Tout du premier coup : tu gagnes une étoile en bonus !" : '';
+      const gris = erreurs > 0 && total > 2 ? " Les étoiles grises, ce sont les questions où tu t'es trompé. Deux étoiles dorées, ça fait une étoile pour ta tirelire." : '';
+      const jok = joker ? ' Et tu as gagné un joker !' : '';
+      const fini = jeux[m.jeu.id].fin ? jeux[m.jeu.id].fin(m, { dorees: n, total, gain }) : null;
+      if (fini) { dire(fini); return; }
+      dire(`${erreurs === 0 ? 'Bravo Solal !' : 'Bien travaillé, Solal !'} ${dit}${bonus}${jok}${gris} Tu peux faire une pause.`);
     };
 
     /* Réussite par élément, pour l'espace parent. */
@@ -372,6 +390,6 @@
   window.Solal = {
     $, $$, hasard, choisir, melanger, pause, BRAVOS,
     lire, ecrire, dire, taire, enLettres, ordinal,
-    montrer, appuiLong, majTresor, gagnerEtoile, moteur
+    montrer, appuiLong, majTresor, gagnerEtoile, moteur, popEtoile
   };
 })();

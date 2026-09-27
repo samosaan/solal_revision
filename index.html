@@ -9,7 +9,7 @@
 <title>Les jeux de Solal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Bangers&display=swap">
 <style>
   :root {
     --lagon: #E4F1EF;
@@ -149,6 +149,17 @@
   }
   .jeu .dessin svg { width: 72%; height: 72%; }
 
+  .jeu.heros-banniere {
+    width: min(100%, 1020px);
+    flex-direction: row; justify-content: center; gap: 22px;
+    padding: 12px 20px;
+    --c: #1E4FA8; --c-fonce: #0B2A66;
+    background: radial-gradient(circle at 30% 30%, #3C74D6, #1E4FA8 70%);
+  }
+  .heros-emoji { font-size: clamp(44px, 8vh, 64px); line-height: 1; }
+  .heros-texte { display: flex; flex-direction: column; align-items: center; }
+  .heros-titre { font-family: "Bangers", "Impact", "Arial Black", sans-serif; font-weight: 400; letter-spacing: .05em; font-size: clamp(34px, 6.5vh, 52px); color: #FFD23F; text-shadow: 3px 3px 0 #0B2A66; line-height: 1; }
+  .heros-sous { font-size: 17px; color: #DCE7FA; font-weight: 700; }
   .jeu.ferme { --c: #C9D3D8; --c-fonce: #A9B5BC; color: var(--encre-douce); }
   .jeu.ferme .dessin { opacity: .55; filter: grayscale(.6); }
   .cadenas {
@@ -195,6 +206,12 @@
       <span class="bloc"><span class="joker">J</span><span id="jokers">0</span></span>
     </a>
   </div>
+
+  <a class="jeu heros-banniere" href="heros/" data-nom="Super Solal">
+    <span class="heros-emoji" aria-hidden="true">🦸‍♂️</span>
+    <span class="heros-texte"><span class="heros-titre">Super Solal</span><span class="heros-sous">Les missions de super-héros</span></span>
+    <span class="heros-emoji" aria-hidden="true">🦹</span>
+  </a>
 
   <nav class="jeux">
     <a class="jeu nombres" href="nombres/" data-nom="Les nombres">
