@@ -126,14 +126,50 @@
     majTresor();
   }
 
-  function appuiLong(el, fn, duree = 1300) {
-    let minuteur = null;
-    const annuler = () => { clearTimeout(minuteur); el.classList.remove('charge'); };
-    el.addEventListener('pointerdown', () => {
-      el.classList.add('charge');
-      minuteur = setTimeout(() => { annuler(); fn(); }, duree);
+  /* Espace parent : protégé par un code à 4 chiffres, tapé sur un pavé (la voix ne dit pas les chiffres). */
+  const CODE_PARENT = '2310';
+  function demanderCode() {
+    return new Promise(fin => {
+      taire();
+      const voile = document.createElement('div');
+      voile.className = 'voile-code';
+      voile.innerHTML = `
+        <div class="pave" role="dialog" aria-modal="true" aria-label="Code parent">
+          <div class="pave-titre">Code parent</div>
+          <div class="pave-points">${'<i></i>'.repeat(4)}</div>
+          <div class="pave-touches">
+            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-n="${n}">${n}</button>`).join('')}
+            <button data-action="fermer" aria-label="Fermer">✗</button>
+            <button data-n="0">0</button>
+            <button data-action="effacer" aria-label="Effacer">⌫</button>
+          </div>
+        </div>`;
+      document.body.appendChild(voile);
+      let saisie = '';
+      const points = [...voile.querySelectorAll('.pave-points i')];
+      const maj = () => points.forEach((p, i) => p.classList.toggle('plein', i < saisie.length));
+      const fermer = ok => { voile.remove(); fin(ok); };
+      voile.addEventListener('click', e => {
+        if (e.target === voile) { fermer(false); return; }
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.dataset.action === 'fermer') { fermer(false); return; }
+        if (b.dataset.action === 'effacer') { saisie = saisie.slice(0, -1); maj(); return; }
+        if (saisie.length >= 4) return;
+        saisie += b.dataset.n;
+        maj();
+        if (saisie.length === 4) {
+          if (saisie === CODE_PARENT) { setTimeout(() => fermer(true), 150); return; }
+          const pave = voile.querySelector('.pave');
+          pave.classList.add('non');
+          setTimeout(() => { pave.classList.remove('non'); saisie = ''; maj(); }, 500);
+        }
+      });
     });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, annuler));
+  }
+  /* Le bouton « Espace parent » ouvre le pavé ; le bon code donne accès. */
+  function appuiLong(el, fn) {
+    el.addEventListener('click', async () => { if (await demanderCode()) fn(); });
     el.addEventListener('contextmenu', e => e.preventDefault());
   }
 

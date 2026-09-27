@@ -34,6 +34,8 @@
   .de { display: grid; grid-template-columns: repeat(3, var(--p)); gap: calc(var(--p) * 0.45); --p: clamp(40px, 9vh, 76px); }
   .cadre { display: grid; gap: 6px; --c: clamp(44px, 9.5vh, 84px); }
   .cadres.deux .cadre { --c: clamp(38px, 7.5vh, 70px); }
+  .cadres.trois .cadre { --c: clamp(28px, 5.6vh, 52px); border-radius: 8px; }
+  .cadres.trois .case { border-width: 3px; border-radius: 8px; }
   .case {
     width: var(--c); height: var(--c);
     border: 4px solid var(--encre-douce);
@@ -131,7 +133,7 @@
       <span class="niveau" data-niveau="ajoute"></span>
     </button>
   </div>
-  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+  <button class="coin-parent" id="btn-parent">🔒 Espace parent</button>
 </section>
 
 <!-- ============ JEU ============ -->
@@ -188,7 +190,7 @@
 (() => {
   const { $, $$, hasard, choisir, melanger, pause, dire, enLettres } = Solal;
   const NOMS = { combien: 'Combien ?', touche: 'Je compte', ecoute: "J'écoute", remplis: 'La boîte', complement: 'Pour faire 10', ajoute: "J'ajoute" };
-  const MAX = [5, 10, 15, 20];
+  const MAX = [10, 20, 30];
   const BESTIOLES = [
     { e: '🐟', nom: 'poisson' }, { e: '🐠', nom: 'poisson' }, { e: '🦀', nom: 'crabe' },
     { e: '🐙', nom: 'pieuvre', f: true }, { e: '🐢', nom: 'tortue', f: true }, { e: '🐚', nom: 'coquillage' }
@@ -227,11 +229,17 @@
       return `<span class="case">${p}</span>`;
     }).join('')}</div>`;
   }
-  /* Jusqu'à 20 points : une boîte pleine de 10, puis une deuxième. */
+  /* Jusqu'à 30 points : des boîtes de 10 remplies l'une après l'autre. */
+  const CLASSE_CADRES = ['', '', 'deux', 'trois'];
   function htmlPoints(n, { bleus = 0 } = {}) {
-    if (n + bleus <= 10) return `<div class="cadres">${htmlCadre(n, { bleus })}</div>`;
-    const r1 = Math.min(n, 10), b1 = 10 - r1;
-    return `<div class="cadres deux">${htmlCadre(r1, { bleus: b1 })}${htmlCadre(Math.max(0, n - 10), { bleus: bleus - b1 })}</div>`;
+    const nb = Math.max(1, Math.ceil((n + bleus) / 10));
+    let html = '';
+    for (let i = 0; i < nb; i++) {
+      const r = Math.max(0, Math.min(10, n - i * 10));
+      const b = Math.max(0, Math.min(10 - r, n + bleus - i * 10 - r));
+      html += htmlCadre(r, { bleus: b });
+    }
+    return `<div class="cadres ${CLASSE_CADRES[nb]}">${html}</div>`;
   }
   async function compterPoints(points, depart = 0) {
     for (let i = 0; i < points.length; i++) {
@@ -247,9 +255,14 @@
     const points = $$('#scene .js-p');
     points.forEach(p => p.classList.remove('compte'));
     if (points.length > 10) {
-      $$('.case', $$('#scene .cadre')[0]).forEach(c => c.classList.add('compte'));
-      await dire('Une boîte pleine, ça fait dix.');
-      await compterPoints(points.slice(10), 10);
+      // Les boîtes pleines d'abord (dix, vingt), puis on continue un par un.
+      const pleines = Math.floor(points.length / 10) - (points.length % 10 === 0 ? 1 : 0);
+      const cadres = $$('#scene .cadre');
+      for (let i = 0; i < pleines; i++) {
+        $$('.case', cadres[i]).forEach(c => c.classList.add('compte'));
+        await dire(i === 0 ? 'Une boîte pleine, ça fait dix.' : `${i === 1 ? 'Deux' : 'Trois'} boîtes pleines, ${enLettres((i + 1) * 10)}.`);
+      }
+      await compterPoints(points.slice(pleines * 10), pleines * 10);
     } else {
       await compterPoints(points);
     }
@@ -258,11 +271,11 @@
   const JEUX = {
     combien: {
       paliers: 4,
-      libelle: p => ["jusqu'à 5", "jusqu'à 10", '10 en éclair', '20 en éclair'][p],
+      libelle: p => ["jusqu'à 10", "jusqu'à 20", '20 en éclair', '30 en éclair'][p],
       montee: p => p >= 2 ? 'Tu es fort ! Maintenant, les points vont se cacher très vite. Regarde bien !' : 'Tu es fort ! On va plus loin.',
       preparer(m, p) {
-        const max = [5, 10, 10, 20][p];
-        const n = tirer(1, max);
+        const max = [10, 20, 20, 30][p];
+        const n = tirer(p === 0 ? 1 : 5, max);
         m.jeu.cle = String(n);
         const de = n <= 6 && p < 2 && Math.random() < 0.5;
         $('#scene').innerHTML = `<div class="carte-points">${de ? htmlDe(n) : htmlPoints(n)}<div class="voile-cache">?</div></div>`;
@@ -284,16 +297,16 @@
     },
 
     touche: {
-      paliers: 4,
+      paliers: 3,
       libelle: p => `jusqu'à ${MAX[p]}`,
       montee: () => 'Tu es fort ! Il y en aura plus.',
       preparer(m, p) {
-        const n = tirer(Math.max(1, MAX[p] - 8), MAX[p]);
+        const n = tirer(p === 0 ? 3 : MAX[p] - 12, MAX[p]);
         const b = choisir(BESTIOLES);
         m.jeu.cle = String(n);
         let compte = 0;
-        const cols = 7, lignes = 3;
-        const taille = n > 12 ? 'clamp(54px, 9vh, 80px)' : 'clamp(70px, 12vh, 104px)';
+        const cols = n > 21 ? 8 : 7, lignes = n > 21 ? 4 : 3;
+        const taille = n > 21 ? 'clamp(44px, 7.5vh, 64px)' : n > 12 ? 'clamp(54px, 9vh, 80px)' : 'clamp(70px, 12vh, 104px)';
         const cases = melanger(Array.from({ length: cols * lignes }, (_, i) => i)).slice(0, n);
         $('#scene').innerHTML = cases.map(c => {
           const x = ((c % cols) + 0.5) / cols * 100 + (Math.random() * 5 - 2.5);
@@ -324,11 +337,11 @@
     },
 
     ecoute: {
-      paliers: 4,
-      libelle: p => `jusqu'à ${MAX[p]}`,
+      paliers: 3,
+      libelle: p => ["jusqu'à 10", 'de 10 à 20', 'de 10 à 30'][p],
       montee: () => 'Tu es fort ! On va plus loin.',
       preparer(m, p) {
-        const n = tirer(p === 0 ? 1 : Math.max(1, MAX[p] - 9), MAX[p]);
+        const n = tirer(p === 0 ? 1 : 10, MAX[p]);
         m.jeu.cle = String(n);
         $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
         $('#scene .oreille').addEventListener('click', () => { if (!m.occupe) m.consigne(m.jeu.consigne); });
@@ -343,18 +356,20 @@
     },
 
     remplis: {
-      paliers: 4,
+      paliers: 3,
       libelle: p => `jusqu'à ${MAX[p]}`,
       montee: () => 'Tu es fort ! On va plus loin.',
       preparer(m, p) {
-        const n = tirer(p === 0 ? 1 : Math.max(2, MAX[p] - 9), MAX[p]);
-        const deux = MAX[p] > 10;
+        const n = tirer(p === 0 ? 1 : MAX[p] - 12, MAX[p]);
+        const nb = MAX[p] / 10;
         m.jeu.cle = String(n);
         let jetons = 0;
-        $('#scene').innerHTML = `<div class="grand-nombre">${n}</div>
-          <div class="carte-points cadre-cliquable" id="boite"><div class="cadres ${deux ? 'deux' : ''}">${htmlCadre(0)}${deux ? htmlCadre(0) : ''}</div></div>`;
+        const boite = `<div class="carte-points cadre-cliquable" id="boite"><div class="cadres ${CLASSE_CADRES[nb]}">${htmlCadre(0).repeat(nb)}</div></div>`;
+        $('#scene').innerHTML = nb === 3
+          ? `<div class="colonne-scene"><div class="grand-nombre" style="font-size:clamp(70px,16vh,130px)">${n}</div>${boite}</div>`
+          : `<div class="grand-nombre">${n}</div>${boite}`;
         const dessiner = () => $$('#boite .case').forEach((c, i) => { c.innerHTML = i < jetons ? '<span class="point"></span>' : ''; });
-        const max = deux ? 20 : 10;
+        const max = nb * 10;
         $('#boite').addEventListener('click', async () => {
           if (m.occupe || jetons >= max) return;
           m.occupe = true; jetons++; dessiner(); await dire(enLettres(jetons)); m.occupe = false;
@@ -449,7 +464,7 @@
   const m = Solal.moteur({ cle: 'solal-nombres-v1', jeux: JEUX });
 
   /* ---------- Espace parent ---------- */
-  const un20 = Array.from({ length: 20 }, (_, i) => String(i + 1));
+  const un20 = Array.from({ length: 30 }, (_, i) => String(i + 1));
   function afficherParent() {
     $('#stats').innerHTML = m.statsHTML(NOMS, { combien: un20, touche: un20, ecoute: un20, remplis: un20 });
     const b = $('#btn-reset');

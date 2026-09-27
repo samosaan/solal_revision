@@ -107,7 +107,7 @@
       <span class="niveau" data-niveau="lis"></span>
     </button>
   </div>
-  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+  <button class="coin-parent" id="btn-parent">🔒 Espace parent</button>
 </section>
 
 <!-- ============ JEU ============ -->
@@ -210,7 +210,23 @@
     { m: 'hélicoptère', e: '🚁', s: ['hé', 'li', 'cop', 'tère'], v: ['é', 'i', 'o'] },
     { m: 'télévision', e: '📺', s: ['té', 'lé', 'vi', 'zion'], v: ['é', 'i'] },
     { m: 'ordinateur', e: '💻', s: ['or', 'di', 'na', 'teur'], v: ['o', 'i', 'a'] },
-    { m: 'hippopotame', e: '🦛', s: ['i', 'po', 'po', 'tam'], v: ['i', 'o', 'a'] }
+    { m: 'hippopotame', e: '🦛', s: ['i', 'po', 'po', 'tam'], v: ['i', 'o', 'a'] },
+    { m: 'dinosaure', e: '🦕', s: ['di', 'no', 'sor'], v: ['i', 'o'] },
+    { m: 'éléphant', e: '🐘', s: ['é', 'lé', 'fan'], v: ['é'] },
+    { m: 'hérisson', e: '🦔', s: ['é', 'ri', 'son'], v: ['é', 'i'] },
+    { m: 'toboggan', e: '🛝', s: ['to', 'bo', 'gan'], v: ['o'] },
+    { m: 'avocat', e: '🥑', s: ['a', 'vo', 'ca'], v: ['a', 'o'] },
+    { m: 'brocoli', e: '🥦', s: ['bro', 'co', 'li'], v: ['o', 'i'] },
+    { m: 'écureuil', e: '🐿️', s: ['é', 'cu', 'reuil'], v: ['é', 'u'] },
+    { m: 'perroquet', e: '🦜', s: ['pè', 'ro', 'kè'], v: ['o'] },
+    { m: 'dromadaire', e: '🐪', s: ['dro', 'ma', 'dère'], v: ['o', 'a'] },
+    { m: 'mandarine', e: '🍊', s: ['man', 'da', 'rine'], v: ['a', 'i'] },
+    { m: 'violon', e: '🎻', s: ['vi', 'o', 'lon'], v: ['i', 'o'] },
+    { m: 'ambulance', e: '🚑', s: ['am', 'bu', 'lance'], v: ['u'] },
+    { m: 'parapluie', e: '☂️', s: ['pa', 'ra', 'plui'], v: null },
+    { m: 'caméléon', e: '🦎', s: ['ca', 'mé', 'lé', 'on'], v: ['a', 'é'] },
+    { m: 'accordéon', e: '🪗', s: ['a', 'cor', 'dé', 'on'], v: ['a', 'o', 'é'] },
+    { m: 'rhinocéros', e: '🦏', s: ['ri', 'no', 'cé', 'ros'], v: ['i', 'o', 'é'] }
   ];
 
   /* Mots à lire : « | » sépare les syllabes (colorées une sur deux), les lettres muettes sont entre parenthèses.
@@ -288,15 +304,15 @@
   const JEUX = {
     syllabes: {
       paliers: 3,
-      libelle: p => ['1 ou 2 syllabes', "jusqu'à 3", "jusqu'à 4"][p],
-      montee: () => 'Maintenant, il y a aussi des mots plus longs !',
+      libelle: p => ['2 ou 3 syllabes', '3 ou 4 syllabes', 'de 1 à 4, mélangés'][p],
+      montee: p => p === 1 ? 'Bravo ! Maintenant, des mots de trois et quatre syllabes.' : 'Bravo ! Maintenant, tout est mélangé : écoute bien !',
       preparer(m, p) {
-        const max = p + 2;
-        const n = Math.random() < 0.4 ? max : 1 + hasard(max);
+        const tailles = [[2, 3], [3, 4], [1, 2, 3, 4]][p];
+        const n = choisir(tailles);
         const mot = tirer(MOTS.filter(x => x.s.length === n), x => x.m);
         m.jeu.cle = String(n);
         sceneMot(mot);
-        m.choix(Array.from({ length: max }, (_, i) => i + 1), {
+        m.choix([1, 2, 3, 4], {
           cible: n,
           rendu: k => `<span class="points">${'●'.repeat(k)}</span>`,
           dit: k => enLettres(k),

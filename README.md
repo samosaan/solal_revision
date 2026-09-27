@@ -27,7 +27,7 @@ Le code partagé (voix, étoiles, déroulé des séances) est dans `commun/`.
 - Chaque jeu monte seul d'un palier (jusqu'à 5, puis 7, puis 10) après 3 réussites du premier coup d'affilée, et redescend après 2 erreurs d'affilée.
 - En cas d'erreur, le jeu montre la bonne démarche (on recompte ensemble) plutôt que de sanctionner.
 - 1 étoile par bonne réponse au premier essai, 10 étoiles = 1 joker, comme en classe. Les étoiles sont communes à tous les jeux.
-- Espace parent (appui long sur le bouton en bas à droite) : réussite par nombre et par jeu. Les données restent sur la tablette.
+- Espace parent (bouton 🔒 en bas à droite, protégé par un code à 4 chiffres) : réussite par nombre et par jeu. Les données restent sur la tablette.
 
 ## Ouvrir sur la tablette
 
