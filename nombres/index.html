@@ -186,6 +186,13 @@
   }
   .progres i.fait { background: var(--algue); border-color: var(--algue); }
   .progres i.encours { border-color: var(--mer); border-width: 3px; }
+/* Étoile qui jaillit après une réponse (grise si on s'est trompé avant) */
+.pop-etoile { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 5; }
+.pop-etoile svg { width: min(38vh, 240px); height: min(38vh, 240px); animation: pop-etoile 1.4s ease forwards; }
+.pop-etoile.ratee svg { filter: grayscale(1); opacity: .55; }
+@keyframes pop-etoile { 0% { transform: scale(.2) rotate(-30deg); opacity: 0; } 30% { transform: scale(1.12) rotate(8deg); opacity: 1; } 65% { transform: scale(1) rotate(0); opacity: 1; } 100% { transform: scale(.7) translateY(-30vh); opacity: 0; } }
+.progres i.aide { background: var(--or); border-color: #C98E1E; }
+.etoile-svg.grise { filter: grayscale(1); opacity: .45; }
 
   .scene {
     flex: 1;
@@ -224,6 +231,7 @@
   }
   .rep:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--mer-fonce); }
   .rep.juste { background: var(--algue); border-color: var(--algue); color: var(--blanc); box-shadow: 0 7px 0 #2D7A4F; animation: hop .45s ease; }
+  .rep.trouve { background: var(--or); border-color: #C98E1E; color: var(--encre); box-shadow: 0 7px 0 #C98E1E; }
   .rep.faux { background: var(--lagon-fonce); border-color: var(--galet); color: var(--encre-douce); box-shadow: 0 3px 0 var(--galet); animation: non .4s ease; }
   .rep.indice { animation: indice 1.1s ease-in-out infinite; }
   .rep.large { width: auto; padding-inline: 32px; font-size: clamp(30px, 6vh, 44px); }
@@ -530,14 +538,14 @@
   let occupe = false;
 
   function lancer(id) {
-    jeu = { id, num: 0, gagnees: 0, dernier: 0 };
+    jeu = { id, num: 0, gagnees: 0, dernier: 0, resultats: [] };
     montrer('jeu');
     questionSuivante();
   }
 
   function majProgres() {
     $('#progres').innerHTML = Array.from({ length: PAR_SEANCE }, (_, i) =>
-      `<i class="${i < jeu.num - 1 ? 'fait' : i === jeu.num - 1 ? 'encours' : ''}"></i>`).join('');
+      `<i class="${i < jeu.num - 1 ? (jeu.resultats[i] === 'aide' ? 'aide' : 'fait') : i === jeu.num - 1 ? 'encours' : ''}"></i>`).join('');
   }
 
   function questionSuivante() {
@@ -593,11 +601,28 @@
     return joker;
   }
 
+  /* Grande étoile au centre : dorée si réussi du premier coup, grise sinon. */
+  function popEtoile(gagnee) {
+    const el = document.createElement('div');
+    el.className = 'pop-etoile' + (gagnee ? '' : ' ratee');
+    el.innerHTML = '<svg><use href="#i-etoile"/></svg>';
+    $('#scene').appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+
   async function bonneReponse(phrase) {
     const premier = jeu.essais === 1;
     let texte = phrase;
+    if (!premier) {
+      // Trouvé après une erreur : on le dit clairement, sans « bravo » ni étoile.
+      jeu.resultats.push('aide');
+      popEtoile(false);
+      texte = `C'est ça. ${texte.replace(/^(oui, bravo|bravo|super|génial|bien joué|oui)\s*!\s*/i, '')} Pas d'étoile cette fois.`;
+    }
     if (premier) {
       noterStat(true);
+      jeu.resultats.push('etoile');
+      popEtoile(true);
       const joker = await gagnerEtoile();
       etat.serie[jeu.id]++;
       etat.ratees[jeu.id] = 0;
@@ -635,7 +660,7 @@
     await dire(MOTS[v]);
     if (v === jeu.cible) {
       $$('#reponses .rep').forEach(b => b.classList.remove('indice'));
-      bouton.classList.add('juste');
+      bouton.classList.add(jeu.essais > 1 ? 'trouve' : 'juste');
       await bonneReponse(JEUX[jeu.id].bravo(jeu.cible));
     } else {
       bouton.classList.add('faux');
@@ -653,12 +678,15 @@
   function finSeance() {
     montrer('fin');
     const n = jeu.gagnees;
-    $('#fin-etoiles').innerHTML = Array.from({ length: n }, (_, i) =>
-      `<svg class="etoile-svg" style="animation-delay:${i * 0.12}s"><use href="#i-etoile"/></svg>`).join('');
-    const texte = n === 0 ? 'Tu as bien travaillé. Tu peux faire une pause.'
-      : `Tu as gagné ${pluriel(n, 'étoile')}. Tu peux faire une pause.`;
-    $('#fin-texte').textContent = n === 0 ? 'Tu as bien travaillé.' : `${n} étoile${n > 1 ? 's' : ''} gagnée${n > 1 ? 's' : ''}`;
-    dire('Bravo Solal ! ' + texte);
+    const res = jeu.resultats;
+    const erreurs = res.filter(r => r === 'aide').length;
+    $('#fin-etoiles').innerHTML = res.map((r, i) =>
+      `<svg class="etoile-svg ${r === 'aide' ? 'grise' : ''}" style="animation-delay:${i * 0.12}s"><use href="#i-etoile"/></svg>`).join('');
+    $('#fin-texte').textContent = `${n} étoile${n > 1 ? 's' : ''} sur ${res.length}`;
+    const dit = n === 0 ? 'Tu as bien travaillé.' : `Tu as gagné ${pluriel(n, 'étoile')}.`;
+    const gris = erreurs === 0 ? ' Tout du premier coup !'
+      : " Les étoiles grises, ce sont les questions où tu t'es trompé. La prochaine fois, tu feras encore mieux !";
+    dire(`${erreurs === 0 ? 'Bravo Solal !' : 'Bien travaillé, Solal !'} ${dit}${gris} Tu peux faire une pause.`);
   }
 
   /* ---------- Dessins ---------- */
@@ -786,7 +814,7 @@
         occupe = true;
         jeu.essais++;
         if (jeu.jetons === jeu.cible) {
-          $('#btn-ok').classList.add('juste');
+          $('#btn-ok').classList.add(jeu.essais > 1 ? 'trouve' : 'juste');
           await bonneReponse(`${BRAVOS[hasard(BRAVOS.length)]} Il y a ${pluriel(jeu.cible, 'jeton')}.`);
         } else {
           mauvaiseReponse();

@@ -8,6 +8,18 @@
   const melanger = a => { for (let i = a.length - 1; i > 0; i--) { const j = hasard(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const pause = ms => new Promise(r => setTimeout(r, ms));
   const BRAVOS = ['Bravo !', 'Super !', 'Génial !', 'Bien joué !', 'Oui, bravo !'];
+  const PREFIXE_BRAVO = /^(oui, bravo|bravo|super|génial|bien joué|oui)\s*!\s*/i;
+
+  /* Grande étoile au centre de la scène : dorée si réussi du premier coup, grise sinon. */
+  function popEtoile(gagnee) {
+    const scene = document.querySelector('#scene');
+    if (!scene) return;
+    const el = document.createElement('div');
+    el.className = 'pop-etoile' + (gagnee ? '' : ' ratee');
+    el.innerHTML = '<svg><use href="#i-etoile"/></svg>';
+    scene.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
 
   /* ---------- Icônes partagées ---------- */
   document.body.insertAdjacentHTML('afterbegin', `
@@ -146,7 +158,7 @@
     };
 
     m.lancer = id => {
-      m.jeu = { id, num: 0, gagnees: 0, total: jeux[id].parSeance || parSeance };
+      m.jeu = { id, num: 0, gagnees: 0, resultats: [], total: jeux[id].parSeance || parSeance };
       montrer('jeu');
       m.suivante();
     };
@@ -154,7 +166,7 @@
     function progres() {
       const j = m.jeu;
       $('#progres').innerHTML = j.total < 2 ? '' : Array.from({ length: j.total }, (_, i) =>
-        `<i class="${i < j.num - 1 ? 'fait' : i === j.num - 1 ? 'encours' : ''}"></i>`).join('');
+        `<i class="${i < j.num - 1 ? (j.resultats[i] === 'aide' ? 'aide' : 'fait') : i === j.num - 1 ? 'encours' : ''}"></i>`).join('');
     }
 
     m.suivante = () => {
@@ -190,8 +202,10 @@
       let texte = phrase || choisir(BRAVOS);
       if (j.essais <= 1) {
         m.noter(true);
+        j.resultats.push(etoile ? 'etoile' : 'fait');
         if (etoile) {
           j.gagnees++;
+          popEtoile(true);
           if (gagnerEtoile()) texte += ' Tu as gagné un joker !';
         }
         etat.serie[j.id]++;
@@ -202,6 +216,11 @@
           const msg = jeux[j.id].montee && jeux[j.id].montee(etat.paliers[j.id]);
           if (msg) texte += ' ' + msg;
         }
+      } else {
+        // Trouvé après une erreur : on le dit clairement, sans « bravo » ni étoile.
+        j.resultats.push('aide');
+        popEtoile(false);
+        texte = `C'est ça. ${texte.replace(PREFIXE_BRAVO, '')} Pas d'étoile cette fois.`;
       }
       m.sauver();
       await dire(texte);
@@ -242,14 +261,14 @@
         if (texte) await dire(texte);
         if (v === cible) {
           $$('.rep', zone).forEach(x => x.classList.remove('indice'));
-          b.classList.add('juste');
+          b.classList.add(m.jeu.essais > 1 ? 'trouve' : 'juste');
           if (avantBravo) await avantBravo(v);
           await m.bonne(bravo ? bravo(v) : null);
         } else {
           b.classList.add('faux');
           m.mauvaise();
           if (aider) await aider(v);
-          if (unCoup) { await pause(300); m.occupe = false; m.suivante(); return; }
+          if (unCoup) { m.jeu.resultats.push('aide'); popEtoile(false); await dire("Pas d'étoile cette fois."); await pause(300); m.occupe = false; m.suivante(); return; }
           if (m.jeu.essais >= 2) m.indice();
           m.occupe = false;
         }
@@ -259,11 +278,15 @@
     m.fin = () => {
       montrer('fin');
       const n = m.jeu.gagnees;
-      $('#fin-etoiles').innerHTML = Array.from({ length: n }, (_, i) =>
-        `<svg class="etoile-svg" style="animation-delay:${i * 0.12}s"><use href="#i-etoile"/></svg>`).join('');
-      $('#fin-texte').textContent = n === 0 ? 'Tu as bien travaillé.' : `${n} étoile${n > 1 ? 's' : ''} gagnée${n > 1 ? 's' : ''}`;
+      const res = m.jeu.resultats;
+      const erreurs = res.filter(r => r === 'aide').length;
+      $('#fin-etoiles').innerHTML = res.map((r, i) =>
+        `<svg class="etoile-svg ${r === 'aide' ? 'grise' : ''}" style="animation-delay:${i * 0.12}s"><use href="#i-etoile"/></svg>`).join('');
+      $('#fin-texte').textContent = res.length > 1 ? `${n} étoile${n > 1 ? 's' : ''} sur ${res.length}` : (n ? '1 étoile gagnée' : 'Tu as bien travaillé.');
       const dit = n === 0 ? 'Tu as bien travaillé.' : `Tu as gagné ${n === 1 ? 'une étoile' : enLettres(n) + ' étoiles'}.`;
-      dire(`Bravo Solal ! ${dit} Tu peux faire une pause.`);
+      const gris = erreurs === 0 ? (res.length > 1 ? ' Tout du premier coup !' : '')
+        : ` Les étoiles grises, ce sont les questions où tu t'es trompé. La prochaine fois, tu feras encore mieux !`;
+      dire(`${erreurs === 0 ? 'Bravo Solal !' : 'Bien travaillé, Solal !'} ${dit}${gris} Tu peux faire une pause.`);
     };
 
     /* Réussite par élément, pour l'espace parent. */

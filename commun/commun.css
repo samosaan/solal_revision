@@ -207,6 +207,7 @@ button { border: 0; cursor: pointer; background: none; }
 }
 .rep:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--mer-fonce); }
 .rep.juste { background: var(--algue); border-color: var(--algue); color: var(--blanc); box-shadow: 0 7px 0 var(--algue-fonce); animation: hop .45s ease; }
+.rep.trouve { background: var(--or); border-color: #C98E1E; color: var(--encre); box-shadow: 0 7px 0 #C98E1E; }
 .rep.faux { background: var(--lagon-fonce); border-color: var(--galet); color: var(--encre-douce); box-shadow: 0 3px 0 var(--galet); animation: non .4s ease; }
 .rep.indice { animation: indice 1.1s ease-in-out infinite; }
 .rep.petit-texte { font-size: clamp(26px, 5vh, 40px); }
@@ -251,6 +252,14 @@ button { border: 0; cursor: pointer; background: none; }
   font-weight: 700;
 }
 .btn-texte.danger { border-color: var(--corail); color: #A2412A; }
+
+/* Étoile qui jaillit après une réponse (grise si on s'est trompé avant) */
+.pop-etoile { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 5; }
+.pop-etoile svg { width: min(38vh, 240px); height: min(38vh, 240px); animation: pop-etoile 1.4s ease forwards; }
+.pop-etoile.ratee svg { filter: grayscale(1); opacity: .55; }
+@keyframes pop-etoile { 0% { transform: scale(.2) rotate(-30deg); opacity: 0; } 30% { transform: scale(1.12) rotate(8deg); opacity: 1; } 65% { transform: scale(1) rotate(0); opacity: 1; } 100% { transform: scale(.7) translateY(-30vh); opacity: 0; } }
+.progres i.aide { background: var(--or); border-color: var(--or-fonce, #C98E1E); }
+.etoile-svg.grise { filter: grayscale(1); opacity: .45; }
 
 @keyframes hop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
 @keyframes non { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
