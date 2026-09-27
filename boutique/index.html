@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>La boutique de Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  .boutique { overflow-y: auto; align-items: center; gap: 18px; }
+  .boutique > * { width: min(100%, 1020px); flex: none; }
+  .boutique > .coin-parent { width: auto; }
+  #accueil { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  .tirelire {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--blanc); border: 3px solid var(--sable-bord); border-radius: 20px;
+    padding: 8px 16px; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .prix { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; justify-content: center; }
+  .prix .etoile-svg { width: 26px; height: 26px; }
+  .prix .joker { width: 26px; height: 34px; font-size: 17px; border-width: 2px; }
+  .tirelire .prix .etoile-svg { width: 34px; height: 34px; }
+  .tirelire .prix .joker { width: 32px; height: 42px; font-size: 20px; border-width: 3px; }
+
+  .rayon-titre { margin: 6px 0 0; font-size: 24px; display: flex; align-items: center; gap: 12px; }
+  .rayon-titre .rond { width: 48px; height: 48px; }
+  .rayon-titre .rond svg { width: 26px; height: 26px; }
+
+  .vitrine { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+  .lot {
+    background: var(--sable); border: 3px solid var(--sable-bord); border-radius: 24px;
+    box-shadow: 0 6px 0 var(--sable-bord);
+    padding: 14px 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    font-size: 19px; font-weight: 700; text-align: center; line-height: 1.2;
+    transition: transform .12s ease, box-shadow .12s ease, opacity .2s ease;
+  }
+  .lot:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--sable-bord); }
+  .lot .img { font-size: 64px; line-height: 1; }
+  .lot.trop-cher { opacity: .55; }
+  .lot.surprise { background: #FDE7DF; border-color: #F3B8A5; box-shadow: 0 6px 0 #F3B8A5; }
+  .lot.album { background: #DDEFF6; border-color: #A9D2E3; box-shadow: 0 6px 0 #A9D2E3; }
+
+  .bons { display: flex; flex-wrap: wrap; gap: 12px; }
+  .bon {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--blanc); border: 3px dashed var(--or); border-radius: 18px;
+    padding: 10px 16px; font-size: 19px; font-weight: 700;
+  }
+  .bon .img { font-size: 38px; }
+  .vide-texte { color: var(--encre-douce); font-size: 17px; }
+
+  /* Fenêtre d'achat */
+  .voile {
+    position: fixed; inset: 0; background: rgba(30,53,83,.45);
+    display: grid; place-items: center; padding: 16px; z-index: 10;
+  }
+  .fiche {
+    background: var(--blanc); border-radius: 30px; padding: 26px 30px;
+    width: min(100%, 560px); display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
+  }
+  .fiche .img { font-size: clamp(90px, 20vh, 150px); line-height: 1; }
+  .fiche .nom { font-size: 30px; font-weight: 700; }
+  .fiche .prix .etoile-svg { width: 40px; height: 40px; }
+  .fiche .prix .joker { width: 38px; height: 50px; font-size: 24px; border-width: 3px; }
+  .fiche .message { font-size: 20px; color: var(--encre-douce); min-height: 1.4em; }
+  .fiche .actions { gap: 18px; }
+  .fiche .rep { min-width: 150px; height: 100px; font-size: 34px; }
+
+  /* Album */
+  .planche { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+  .case-album {
+    aspect-ratio: 1; border-radius: 20px; display: grid; place-items: center;
+    background: var(--blanc); box-shadow: 0 4px 0 var(--sable-bord);
+    font-size: 58px; line-height: 1;
+  }
+  .case-album.manque { background: var(--lagon-fonce); box-shadow: none; color: var(--galet); font-size: 40px; font-weight: 700; }
+  .case-album.neuf { animation: hop .6s ease 2; }
+
+  /* Parent */
+  .parent input, .parent select { user-select: text; -webkit-user-select: text; font-family: inherit; font-size: 18px; }
+  .ligne-lot { display: grid; grid-template-columns: 70px 1fr 110px 90px 56px; gap: 8px; align-items: center; }
+  .ligne-lot input[type="text"] { width: 100%; padding: 8px 10px; border: 2px solid var(--galet); border-radius: 10px; background: var(--blanc); color: var(--encre); }
+  .ligne-lot input.emoji { text-align: center; font-size: 26px; padding: 4px; }
+  .ligne-lot input[type="number"] { width: 100%; padding: 8px; border: 2px solid var(--galet); border-radius: 10px; background: var(--blanc); color: var(--encre); }
+  .ligne-lot label { display: flex; align-items: center; gap: 6px; font-size: 15px; color: var(--encre-douce); }
+  .ligne-lot button { width: 48px; height: 48px; border-radius: 12px; border: 2px solid var(--galet); background: var(--blanc); font-size: 20px; }
+  .entete-lots { font-size: 14px; color: var(--encre-douce); font-weight: 700; }
+  .liste-parent { display: grid; gap: 8px; }
+  .bon-parent { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .reglage { display: flex; align-items: center; gap: 14px; font-size: 20px; font-weight: 700; flex-wrap: wrap; }
+  .reglage button.pm { width: 56px; height: 56px; border-radius: 50%; background: var(--blanc); border: 3px solid var(--galet); font-size: 28px; font-weight: 700; }
+  @media (max-width: 700px) { .ligne-lot { grid-template-columns: 56px 1fr 80px; } .ligne-lot label, .ligne-lot button { grid-column: auto; } }
+</style>
+</head>
+<body>
+
+<!-- ============ BOUTIQUE ============ -->
+<section id="accueil" class="ecran boutique">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">La boutique <small>J'échange mes étoiles</small></h1>
+    </div>
+    <button class="tirelire" id="btn-tirelire" aria-label="Mes étoiles">
+      <span class="prix" id="tirelire-prix"></span>
+      <span id="tirelire-total"></span>
+    </button>
+  </div>
+
+  <h2 class="rayon-titre"><button class="rond ecoute" data-dire="Les autocollants. Chaque autocollant coûte deux étoiles. C'est une surprise !" aria-label="Écouter"><svg><use href="#i-son"/></svg></button>Les autocollants</h2>
+  <div class="vitrine">
+    <button class="lot surprise" id="btn-surprise">
+      <span class="img">🎁</span>
+      Autocollant surprise
+      <span class="prix" id="prix-surprise"></span>
+    </button>
+    <button class="lot album" id="btn-album">
+      <span class="img">📒</span>
+      Mon album
+      <span id="album-compte" style="font-size:17px;color:var(--encre-douce)"></span>
+    </button>
+  </div>
+
+  <h2 class="rayon-titre"><button class="rond ecoute" data-dire="Les cadeaux. Quand tu en achètes un, montre ton bon à papa." aria-label="Écouter"><svg><use href="#i-son"/></svg></button>Les cadeaux</h2>
+  <div class="vitrine" id="vitrine-lots"></div>
+
+  <h2 class="rayon-titre"><button class="rond ecoute" id="btn-dire-bons" aria-label="Écouter"><svg><use href="#i-son"/></svg></button>Mes bons à montrer à papa</h2>
+  <div class="bons" id="bons"></div>
+
+  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+</section>
+
+<!-- ============ ALBUM ============ -->
+<section id="album" class="ecran boutique" hidden>
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <button class="rond" id="btn-album-retour" aria-label="Retour à la boutique"><svg><use href="#i-maison"/></svg></button>
+      <h1 class="titre">Mon album <small id="album-sous-titre"></small></h1>
+    </div>
+  </div>
+  <div class="planche" id="planche"></div>
+</section>
+
+<!-- ============ PARENT ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent · La boutique</h2>
+  </div>
+
+  <h3>Bons à donner</h3>
+  <div class="liste-parent" id="parent-bons"></div>
+
+  <h3>Les cadeaux proposés</h3>
+  <p>Choisissez les cadeaux et leur prix en étoiles. Solal gagne en moyenne 5 à 8 étoiles par séance de 5 minutes. Décochez « visible » pour cacher un cadeau sans le supprimer.</p>
+  <div class="ligne-lot entete-lots"><span>Image</span><span>Nom</span><span>Prix</span><span></span><span></span></div>
+  <div class="liste-parent" id="parent-lots"></div>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte" id="btn-ajouter-lot">+ Ajouter un cadeau</button>
+  </div>
+
+  <h3>Étoiles</h3>
+  <p>Pour récompenser un effort fait hors de la tablette, ou corriger un compte.</p>
+  <div class="reglage">
+    <button class="pm" id="btn-etoile-moins" aria-label="Retirer une étoile">−</button>
+    <span id="parent-total"></span>
+    <button class="pm" id="btn-etoile-plus" aria-label="Ajouter une étoile">+</button>
+  </div>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, $$, choisir, pause, dire, enLettres, lire, ecrire } = Solal;
+
+  const PRIX_AUTOCOLLANT = 2;
+  const AUTOCOLLANTS = ['🐬', '🐳', '🐙', '🦀', '🐠', '🦈', '🐢', '🦭', '🐧', '🦩', '🦜', '🦁',
+    '🐯', '🐼', '🦊', '🦉', '🦖', '🦕', '🚀', '🚒', '🏎️', '⚽', '🏴‍☠️', '🦄'];
+  const LOTS_DEPART = [
+    { e: '🍰', nom: 'Choisir le dessert', prix: 5 },
+    { e: '📖', nom: "Choisir l'histoire du soir", prix: 5 },
+    { e: '📺', nom: 'Un dessin animé en plus', prix: 8 },
+    { e: '🎲', nom: 'Un jeu avec papa', prix: 10 },
+    { e: '🛝', nom: 'Une sortie au parc', prix: 15 },
+    { e: '🎁', nom: 'Un petit cadeau', prix: 30 }
+  ];
+  const CLE = 'solal-boutique-v1';
+  const CLE_TRESOR = 'solal-tresor-v1';
+  let id = Date.now();
+  const nouveauId = () => String(id++);
+
+  const etat = lire(CLE, () => ({
+    lots: LOTS_DEPART.map(l => ({ ...l, id: nouveauId(), visible: true })),
+    bons: [],
+    album: []
+  }));
+  const sauver = () => ecrire(CLE, etat);
+
+  /* ---------- Étoiles : 1 joker = 10 étoiles ---------- */
+  function lireTresor() {
+    try {
+      const b = localStorage.getItem(CLE_TRESOR) || localStorage.getItem('solal-nombres-v1');
+      const t = b ? JSON.parse(b) : {};
+      return { etoiles: t.etoiles || 0, jokers: t.jokers || 0 };
+    } catch (e) { return { etoiles: 0, jokers: 0 }; }
+  }
+  const total = () => { const t = lireTresor(); return t.jokers * 10 + t.etoiles; };
+  function fixerTotal(n) {
+    n = Math.max(0, n);
+    ecrire(CLE_TRESOR, { etoiles: n % 10, jokers: Math.floor(n / 10) });
+  }
+  const etoilesDites = n => n === 1 ? 'une étoile' : `${enLettres(n)} étoiles`;
+  function prixHTML(n) {
+    const j = Math.floor(n / 10), e = n % 10;
+    return '<span class="joker">J</span>'.repeat(j) + '<svg class="etoile-svg"><use href="#i-etoile"/></svg>'.repeat(e) || '<span style="font-size:18px;color:var(--encre-douce)">0</span>';
+  }
+
+  /* ---------- Affichage ---------- */
+  function afficher() {
+    const t = total();
+    $('#tirelire-prix').innerHTML = prixHTML(t);
+    $('#tirelire-total').textContent = t;
+    $('#prix-surprise').innerHTML = prixHTML(PRIX_AUTOCOLLANT);
+    $('#btn-surprise').classList.toggle('trop-cher', t < PRIX_AUTOCOLLANT || etat.album.length >= AUTOCOLLANTS.length);
+    $('#album-compte').textContent = `${etat.album.length} / ${AUTOCOLLANTS.length}`;
+
+    const lots = etat.lots.filter(l => l.visible && l.nom.trim());
+    $('#vitrine-lots').innerHTML = lots.map(l => `
+      <button class="lot ${t < l.prix ? 'trop-cher' : ''}" data-id="${l.id}">
+        <span class="img">${l.e || '🎁'}</span>${echapper(l.nom)}<span class="prix">${prixHTML(l.prix)}</span>
+      </button>`).join('') || '<p class="vide-texte">Papa n\'a pas encore choisi de cadeaux.</p>';
+    $$('#vitrine-lots .lot').forEach(b => b.addEventListener('click', () => ouvrirFiche(etat.lots.find(l => l.id === b.dataset.id))));
+
+    const bons = etat.bons.filter(b => !b.donne);
+    $('#bons').innerHTML = bons.map(b => `<div class="bon"><span class="img">${b.e}</span>${echapper(b.nom)}</div>`).join('')
+      || '<p class="vide-texte">Pas de bon pour l\'instant.</p>';
+  }
+  const echapper = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  $('#btn-tirelire').addEventListener('click', () => {
+    const t = total();
+    dire(t === 0 ? "Tu n'as pas encore d'étoiles. Joue pour en gagner !" : `Tu as ${etoilesDites(t)}.`);
+  });
+  $$('[data-dire]').forEach(b => b.addEventListener('click', () => dire(b.dataset.dire)));
+  $('#btn-dire-bons').addEventListener('click', () => {
+    const bons = etat.bons.filter(b => !b.donne);
+    dire(bons.length ? `Tu as ${bons.length === 1 ? 'un bon' : enLettres(bons.length) + ' bons'} à montrer à papa : ${bons.map(b => b.nom).join(', ')}.` : "Tu n'as pas de bon pour l'instant.");
+  });
+
+  /* ---------- Fenêtre d'achat ---------- */
+  function ouvrirFiche(lot) {
+    const t = total();
+    const assez = t >= lot.prix;
+    const manque = lot.prix - t;
+    const voile = document.createElement('div');
+    voile.className = 'voile';
+    voile.innerHTML = `
+      <div class="fiche" role="dialog" aria-modal="true">
+        <div class="img">${lot.e || '🎁'}</div>
+        <div class="nom">${echapper(lot.nom)}</div>
+        <div class="prix">${prixHTML(lot.prix)}</div>
+        <div class="message">${assez ? '' : `Il te manque ${manque} étoile${manque > 1 ? 's' : ''}.`}</div>
+        <div class="actions">
+          ${assez ? '<button class="rep vert" id="btn-acheter" aria-label="Acheter">✓</button>' : ''}
+          <button class="rep gris" id="btn-fermer" aria-label="Retour">✗</button>
+        </div>
+      </div>`;
+    document.body.appendChild(voile);
+    const fermer = () => { Solal.taire(); voile.remove(); };
+    $('#btn-fermer', voile).addEventListener('click', fermer);
+    voile.addEventListener('click', e => { if (e.target === voile) fermer(); });
+    dire(assez
+      ? `${lot.nom}. Ça coûte ${etoilesDites(lot.prix)}. Tu veux l'acheter ? Appuie sur le bouton vert.`
+      : `${lot.nom}. Ça coûte ${etoilesDites(lot.prix)}. Il te manque ${etoilesDites(manque)}. Continue à jouer !`);
+    if (!assez) return;
+    $('#btn-acheter', voile).addEventListener('click', async () => {
+      if (total() < lot.prix) return;
+      fixerTotal(total() - lot.prix);
+      etat.bons.push({ id: nouveauId(), e: lot.e || '🎁', nom: lot.nom, date: new Date().toISOString(), donne: false });
+      sauver();
+      voile.remove();
+      afficher();
+      await dire(`Bravo ! Tu as acheté : ${lot.nom}. Va montrer ton bon à papa !`);
+    });
+  }
+
+  /* ---------- Autocollant surprise et album ---------- */
+  $('#btn-surprise').addEventListener('click', () => {
+    const manquants = AUTOCOLLANTS.filter(a => !etat.album.includes(a));
+    if (!manquants.length) { dire('Bravo ! Ton album est complet !'); return; }
+    ouvrirFiche({ e: '🎁', nom: 'Un autocollant surprise', prix: PRIX_AUTOCOLLANT, surprise: true });
+    const acheter = $('#btn-acheter');
+    if (!acheter) return;
+    // On remplace l'achat normal par l'ouverture de la surprise.
+    const neuf = acheter.cloneNode(true);
+    acheter.replaceWith(neuf);
+    neuf.addEventListener('click', async () => {
+      if (total() < PRIX_AUTOCOLLANT) return;
+      fixerTotal(total() - PRIX_AUTOCOLLANT);
+      const gagne = choisir(manquants);
+      etat.album.push(gagne);
+      sauver();
+      document.querySelector('.voile').remove();
+      afficher();
+      ouvrirAlbum(gagne);
+      await dire('Surprise ! Un nouvel autocollant pour ton album !');
+    });
+  });
+
+  function ouvrirAlbum(neuf) {
+    $('#album-sous-titre').textContent = `${etat.album.length} autocollant${etat.album.length > 1 ? 's' : ''} sur ${AUTOCOLLANTS.length}`;
+    $('#planche').innerHTML = AUTOCOLLANTS.map(a => etat.album.includes(a)
+      ? `<div class="case-album ${a === neuf ? 'neuf' : ''}">${a}</div>`
+      : '<div class="case-album manque">?</div>').join('');
+    Solal.montrer('album');
+  }
+  $('#btn-album').addEventListener('click', () => {
+    ouvrirAlbum(null);
+    dire(`Ton album. Tu as ${etat.album.length === 0 ? 'zéro' : enLettres(etat.album.length)} autocollant${etat.album.length > 1 ? 's' : ''}.`);
+  });
+  $('#btn-album-retour').addEventListener('click', () => { Solal.taire(); Solal.montrer('accueil'); afficher(); });
+
+  /* ---------- Espace parent ---------- */
+  function afficherParent() {
+    const bons = etat.bons.filter(b => !b.donne);
+    $('#parent-bons').innerHTML = bons.map(b => `
+      <div class="bon-parent"><span class="bon"><span class="img">${b.e}</span>${echapper(b.nom)}</span>
+        <span style="color:var(--encre-douce);font-size:15px">acheté le ${new Date(b.date).toLocaleDateString('fr-FR')}</span>
+        <button class="btn-texte" data-donne="${b.id}">C'est donné</button></div>`).join('')
+      || '<p>Aucun bon en attente.</p>';
+    $$('[data-donne]').forEach(btn => btn.addEventListener('click', () => {
+      const b = etat.bons.find(x => x.id === btn.dataset.donne);
+      if (b) { b.donne = true; sauver(); afficherParent(); }
+    }));
+
+    $('#parent-lots').innerHTML = etat.lots.map(l => `
+      <div class="ligne-lot" data-id="${l.id}">
+        <input type="text" class="emoji" id="e-${l.id}" value="${echapper(l.e || '')}" maxlength="4" aria-label="Image">
+        <input type="text" id="n-${l.id}" value="${echapper(l.nom)}" maxlength="40" aria-label="Nom du cadeau">
+        <input type="number" id="p-${l.id}" value="${l.prix}" min="1" max="200" aria-label="Prix en étoiles">
+        <label><input type="checkbox" id="v-${l.id}" ${l.visible ? 'checked' : ''}> visible</label>
+        <button data-suppr="${l.id}" aria-label="Supprimer">🗑</button>
+      </div>`).join('');
+    $$('#parent-lots .ligne-lot').forEach(ligne => {
+      const l = etat.lots.find(x => x.id === ligne.dataset.id);
+      const maj = () => {
+        l.e = $(`#e-${l.id}`).value.trim();
+        l.nom = $(`#n-${l.id}`).value;
+        l.prix = Math.max(1, Math.min(200, parseInt($(`#p-${l.id}`).value, 10) || 1));
+        l.visible = $(`#v-${l.id}`).checked;
+        sauver();
+      };
+      $$('input', ligne).forEach(i => i.addEventListener('change', maj));
+      $('[data-suppr]', ligne).addEventListener('click', e => {
+        const b = e.currentTarget;
+        if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = '✓?'; return; }
+        etat.lots = etat.lots.filter(x => x.id !== l.id);
+        sauver();
+        afficherParent();
+      });
+    });
+    $('#parent-total').textContent = `${total()} étoile${total() > 1 ? 's' : ''}`;
+    Solal.montrer('parent');
+  }
+  Solal.appuiLong($('#btn-parent'), afficherParent);
+  $('#btn-parent-retour').addEventListener('click', () => { Solal.montrer('accueil'); afficher(); });
+  $('#btn-ajouter-lot').addEventListener('click', () => {
+    etat.lots.push({ id: nouveauId(), e: '🎁', nom: 'Nouveau cadeau', prix: 5, visible: true });
+    sauver();
+    afficherParent();
+  });
+  $('#btn-etoile-plus').addEventListener('click', () => { fixerTotal(total() + 1); afficherParent(); });
+  $('#btn-etoile-moins').addEventListener('click', () => { fixerTotal(total() - 1); afficherParent(); });
+
+  afficher();
+})();
+</script>
+</body>
+</html>

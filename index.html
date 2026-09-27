@@ -92,6 +92,9 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
+  a.tresor { text-decoration: none; color: var(--encre); box-shadow: 0 6px 0 var(--sable-bord); transition: transform .12s ease, box-shadow .12s ease; }
+  a.tresor:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--sable-bord); }
+  .tresor .sac { font-size: 40px; line-height: 1; }
   .tresor .bloc { display: flex; align-items: center; gap: 6px; }
   .tresor svg { width: 40px; height: 40px; }
   .joker {
@@ -184,10 +187,11 @@
       <button class="ecouter" id="btn-ecouter" aria-label="Écouter"><svg><use href="#i-son"/></svg></button>
       <h1>Bonjour Solal !</h1>
     </div>
-    <div class="tresor" aria-label="Mes étoiles et mes jokers">
+    <a class="tresor" id="lien-boutique" href="boutique/" aria-label="La boutique : mes étoiles et mes jokers">
+      <span class="sac" aria-hidden="true">🛍️</span>
       <span class="bloc"><svg><use href="#i-etoile"/></svg><span id="etoiles">0</span>/10</span>
       <span class="bloc"><span class="joker">J</span><span id="jokers">0</span></span>
-    </div>
+    </a>
   </div>
 
   <nav class="jeux">
@@ -298,6 +302,14 @@
       await dire(el.dataset.nom);
       location.href = el.getAttribute('href');
     });
+  });
+
+  document.getElementById('lien-boutique').addEventListener('click', async e => {
+    e.preventDefault();
+    if (enRoute) return;
+    enRoute = true;
+    await dire('La boutique');
+    location.href = 'boutique/';
   });
 
   // Au retour arrière dans Safari, la page peut revenir de son cache : on débloque.

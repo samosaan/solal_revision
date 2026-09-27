@@ -15,6 +15,8 @@ les jeux pas encore prêts apparaissent avec un cadenas.
 | J'écris | `ecrire/` | Tracer au doigt les gestes de base, les chiffres de 0 à 9 et les lettres a, i, o, u, é, l, avec une piste large ; conseils pour gaucher |
 | Les jours | `jours/` | Rituel « Chaque jour compte » (compteur des jours d'école, dizaines et unités), la semaine, hier et demain, les saisons |
 
+| La boutique | `boutique/` | Échanger ses étoiles : autocollants surprise pour un album, et cadeaux choisis par le parent (bons à montrer, marqués « donnés » dans l'espace parent) |
+
 Le code partagé (voix, étoiles, déroulé des séances) est dans `commun/`.
 
 ## Principes
