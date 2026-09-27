@@ -176,6 +176,7 @@
     flex: none;
   }
   .rond svg { width: 34px; height: 34px; }
+  a.rond { color: var(--encre); }
   .rond.ecoute { background: var(--mer); border-color: var(--mer-fonce); color: var(--blanc); }
   .progres { display: flex; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
   .progres i {
@@ -363,7 +364,10 @@
 <!-- ============ ACCUEIL ============ -->
 <section id="accueil" class="ecran">
   <div class="accueil-haut">
-    <h1 class="titre">L'île aux nombres <small>Les nombres de 1 à 10</small></h1>
+    <div style="display:flex;align-items:center;gap:18px">
+      <a class="rond" id="lien-jeux" href="../" aria-label="Retour à tous les jeux" hidden><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">L'île aux nombres <small>Les nombres de 1 à 10</small></h1>
+    </div>
     <div class="compteur" aria-label="Étoiles et jokers">
       <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
       <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
@@ -830,6 +834,9 @@
   $('#btn-reecouter').addEventListener('click', () => { if (!occupe && jeu && jeu.consigne) consigne(jeu.consigne); });
   $('#btn-encore').addEventListener('click', () => lancer(jeu.id));
   $('#btn-accueil').addEventListener('click', () => montrer('accueil'));
+
+  // Le bouton vers tous les jeux n'apparaît que sur le site (pas dans l'aperçu Claude).
+  if (/\/nombres\/?(index\.html)?$/.test(location.pathname)) $('#lien-jeux').hidden = false;
 
   majCompteurs();
 })();

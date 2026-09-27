@@ -5,9 +5,15 @@ Toutes les consignes sont dites à voix haute, et l'enfant répond en touchant l
 
 ## Modules
 
+La page d'accueil (`index.html`) regroupe tous les jeux. La voix dit le nom de chaque jeu quand on le touche ;
+les jeux pas encore prêts apparaissent avec un cadenas.
+
 | Module | Dossier | Contenu |
 |---|---|---|
 | L'île aux nombres | `nombres/` | Nombres de 1 à 10 : reconnaître une quantité, compter en touchant, retrouver un chiffre entendu, remplir une boîte de dix |
+| Les sons | à venir | Entendre les sons et les syllabes, suivre la progression Taoki |
+| J'écris | à venir | Gestes d'écriture adaptés gaucher |
+| Les jours | à venir | Date, jour d'avant et d'après, saisons |
 
 ## Principes
 

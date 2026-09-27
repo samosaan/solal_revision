@@ -2,8 +2,310 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="refresh" content="0; url=nombres/">
-<title>Révisions de Solal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Solal">
+<title>Les jeux de Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<style>
+  :root {
+    --lagon: #E4F1EF;
+    --lagon-fonce: #CFE5E1;
+    --sable: #FBF1DC;
+    --sable-bord: #E8D6B0;
+    --encre: #1E3553;
+    --encre-douce: #5A6F86;
+    --mer: #2F7FA3;
+    --mer-fonce: #22617E;
+    --corail: #EE7B5B;
+    --corail-fonce: #C85D40;
+    --or: #F2B544;
+    --or-fonce: #C98E1E;
+    --algue: #3E9E68;
+    --algue-fonce: #2D7A4F;
+    --galet: #B9C3CC;
+    --blanc: #FFFDF8;
+    --police: "Andika", "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--lagon);
+    color: var(--encre);
+    font-family: var(--police);
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, a { font-family: inherit; color: inherit; touch-action: manipulation; }
+  button { border: 0; cursor: pointer; }
+  :focus-visible { outline: 4px solid var(--or); outline-offset: 3px; }
+
+  .page {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(18px, 4vh, 34px);
+    padding-inline: max(16px, env(safe-area-inset-left, 0px));
+    padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .haut {
+    width: min(100%, 1020px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .salut { display: flex; align-items: center; gap: 18px; }
+  .ecouter {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: var(--mer);
+    color: var(--blanc);
+    display: grid; place-items: center;
+    box-shadow: 0 6px 0 var(--mer-fonce);
+    flex: none;
+  }
+  .ecouter:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--mer-fonce); }
+  .ecouter svg { width: 40px; height: 40px; }
+  h1 { margin: 0; font-size: clamp(38px, 7vh, 60px); line-height: 1.05; }
+
+  .tresor {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--blanc);
+    border: 3px solid var(--sable-bord);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .tresor .bloc { display: flex; align-items: center; gap: 6px; }
+  .tresor svg { width: 40px; height: 40px; }
+  .joker {
+    display: inline-grid; place-items: center;
+    width: 34px; height: 44px;
+    border-radius: 6px;
+    background: var(--blanc);
+    border: 3px solid var(--mer);
+    color: var(--mer);
+    font-size: 22px;
+  }
+
+  .jeux {
+    width: min(100%, 1020px);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(14px, 2.4vw, 24px);
+  }
+  .jeu {
+    --c: var(--mer);
+    --c-fonce: var(--mer-fonce);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 12px 18px;
+    background: var(--c);
+    border-radius: 30px;
+    box-shadow: 0 8px 0 var(--c-fonce);
+    color: var(--blanc);
+    font-size: clamp(22px, 3.6vh, 28px);
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .jeu:active { transform: translateY(5px); box-shadow: 0 3px 0 var(--c-fonce); }
+  .jeu.sons { --c: var(--corail); --c-fonce: var(--corail-fonce); }
+  .jeu.ecrire { --c: var(--algue); --c-fonce: var(--algue-fonce); }
+  .jeu.jours { --c: var(--or); --c-fonce: var(--or-fonce); color: var(--encre); }
+  .jeu .dessin {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 1;
+    border-radius: 22px;
+    background: var(--blanc);
+    display: grid;
+    place-items: center;
+    color: var(--encre);
+  }
+  .jeu .dessin svg { width: 72%; height: 72%; }
+
+  .jeu.ferme { --c: #C9D3D8; --c-fonce: #A9B5BC; color: var(--encre-douce); }
+  .jeu.ferme .dessin { opacity: .55; filter: grayscale(.6); }
+  .cadenas {
+    position: absolute;
+    top: -12px; right: -12px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--blanc);
+    border: 3px solid var(--galet);
+    display: grid; place-items: center;
+    color: var(--encre-douce);
+  }
+  .cadenas svg { width: 26px; height: 26px; }
+
+  .rebond { animation: rebond .45s ease; }
+  .non { animation: non .4s ease; }
+  @keyframes rebond { 0%,100% { transform: scale(1); } 45% { transform: scale(1.06); } }
+  @keyframes non { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  @media (max-width: 760px) { .jeux { grid-template-columns: repeat(2, 1fr); } }
+</style>
 </head>
-<body><p><a href="nombres/">L'île aux nombres</a></p></body>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-etoile" viewBox="0 0 100 100">
+      <path d="M50 6 C55 6 58 30 62 36 C66 42 92 40 94 45 C96 50 74 62 72 69 C70 76 82 95 78 98 C74 101 56 84 50 84 C44 84 26 101 22 98 C18 95 30 76 28 69 C26 62 4 50 6 45 C8 40 34 42 38 36 C42 30 45 6 50 6 Z" fill="#EE7B5B" stroke="#C85D40" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="50" cy="52" r="3.5" fill="#FBF1DC"/><circle cx="50" cy="30" r="2.5" fill="#FBF1DC"/><circle cx="72" cy="48" r="2.5" fill="#FBF1DC"/><circle cx="28" cy="48" r="2.5" fill="#FBF1DC"/><circle cx="63" cy="74" r="2.5" fill="#FBF1DC"/><circle cx="37" cy="74" r="2.5" fill="#FBF1DC"/>
+    </symbol>
+    <symbol id="i-son" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-cadenas" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+  </defs>
+</svg>
+
+<main class="page">
+  <div class="haut">
+    <div class="salut">
+      <button class="ecouter" id="btn-ecouter" aria-label="Écouter"><svg><use href="#i-son"/></svg></button>
+      <h1>Bonjour Solal !</h1>
+    </div>
+    <div class="tresor" aria-label="Mes étoiles et mes jokers">
+      <span class="bloc"><svg><use href="#i-etoile"/></svg><span id="etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span id="jokers">0</span></span>
+    </div>
+  </div>
+
+  <nav class="jeux">
+    <a class="jeu nombres" href="nombres/" data-nom="Les nombres">
+      <span class="dessin">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <rect x="14" y="14" width="72" height="72" rx="14" fill="#FBF1DC" stroke="#E8D6B0" stroke-width="3"/>
+          <circle cx="32" cy="32" r="8" fill="#2F7FA3"/><circle cx="68" cy="32" r="8" fill="#2F7FA3"/>
+          <circle cx="50" cy="50" r="8" fill="#2F7FA3"/>
+          <circle cx="32" cy="68" r="8" fill="#2F7FA3"/><circle cx="68" cy="68" r="8" fill="#2F7FA3"/>
+        </svg>
+      </span>
+      Les nombres
+    </a>
+
+    <a class="jeu sons ferme" href="#" data-nom="Les sons" data-ferme="1">
+      <span class="cadenas"><svg><use href="#i-cadenas"/></svg></span>
+      <span class="dessin">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <text x="38" y="70" font-family="Andika, Comic Sans MS, sans-serif" font-size="62" font-weight="700" fill="#EE7B5B" text-anchor="middle">a</text>
+          <path d="M66 38a14 14 0 0 1 0 24M74 30a25 25 0 0 1 0 40" fill="none" stroke="#1E3553" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      Les sons
+    </a>
+
+    <a class="jeu ecrire ferme" href="#" data-nom="J'écris" data-ferme="1">
+      <span class="cadenas"><svg><use href="#i-cadenas"/></svg></span>
+      <span class="dessin">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M14 72c10-22 18-22 22 0s12 22 22 0 14-22 24 0" fill="none" stroke="#3E9E68" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 9"/>
+          <g transform="rotate(35 62 40)">
+            <rect x="56" y="10" width="13" height="48" rx="3" fill="#F2B544" stroke="#1E3553" stroke-width="3"/>
+            <path d="M56 58l6.5 13 6.5-13z" fill="#FBF1DC" stroke="#1E3553" stroke-width="3" stroke-linejoin="round"/>
+          </g>
+        </svg>
+      </span>
+      J'écris
+    </a>
+
+    <a class="jeu jours ferme" href="#" data-nom="Les jours" data-ferme="1">
+      <span class="cadenas"><svg><use href="#i-cadenas"/></svg></span>
+      <span class="dessin">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <rect x="16" y="22" width="68" height="62" rx="10" fill="#FFFDF8" stroke="#1E3553" stroke-width="4"/>
+          <rect x="16" y="22" width="68" height="18" rx="10" fill="#EE7B5B"/>
+          <rect x="16" y="32" width="68" height="8" fill="#EE7B5B"/>
+          <path d="M34 14v16M66 14v16" stroke="#1E3553" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="36" cy="54" r="5" fill="#B9C3CC"/><circle cx="50" cy="54" r="5" fill="#B9C3CC"/><circle cx="64" cy="54" r="5" fill="#2F7FA3"/>
+          <circle cx="36" cy="70" r="5" fill="#B9C3CC"/><circle cx="50" cy="70" r="5" fill="#B9C3CC"/>
+        </svg>
+      </span>
+      Les jours
+    </a>
+  </nav>
+</main>
+
+<script>
+(() => {
+  // Étoiles et jokers : lus depuis le jeu des nombres (même tablette, même site).
+  try {
+    const n = JSON.parse(localStorage.getItem('solal-nombres-v1') || '{}');
+    document.getElementById('etoiles').textContent = n.etoiles || 0;
+    document.getElementById('jokers').textContent = n.jokers || 0;
+  } catch (e) {}
+
+  let voix = null;
+  function choisirVoix() {
+    const fr = speechSynthesis.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith('fr'));
+    voix = fr.find(v => /fr[-_]fr/i.test(v.lang) && /amélie|amelie|thomas|audrey|marie|google/i.test(v.name))
+        || fr.find(v => /fr[-_]fr/i.test(v.lang)) || fr[0] || null;
+  }
+  const parle = 'speechSynthesis' in window;
+  if (parle) { choisirVoix(); speechSynthesis.onvoiceschanged = choisirVoix; }
+  function dire(texte) {
+    return new Promise(fin => {
+      if (!parle) { setTimeout(fin, 300); return; }
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(texte);
+      u.lang = 'fr-FR';
+      if (voix) u.voice = voix;
+      u.rate = 0.85;
+      u.pitch = 1.05;
+      let fait = false;
+      const finir = () => { if (!fait) { fait = true; fin(); } };
+      u.onend = finir;
+      u.onerror = finir;
+      setTimeout(finir, 900 + texte.length * 110);
+      speechSynthesis.speak(u);
+    });
+  }
+
+  document.getElementById('btn-ecouter').addEventListener('click', () => {
+    dire('Bonjour Solal ! Choisis un jeu. Les jeux avec un cadenas arrivent bientôt.');
+  });
+
+  let enRoute = false;
+  document.querySelectorAll('.jeu').forEach(el => {
+    el.addEventListener('click', async e => {
+      e.preventDefault();
+      if (enRoute) return;
+      el.classList.remove('rebond', 'non');
+      void el.offsetWidth;
+      if (el.dataset.ferme) {
+        el.classList.add('non');
+        dire(`${el.dataset.nom}. Ce jeu arrive bientôt !`);
+        return;
+      }
+      enRoute = true;
+      el.classList.add('rebond');
+      await dire(el.dataset.nom);
+      location.href = el.getAttribute('href');
+    });
+  });
+
+  // Au retour arrière dans Safari, la page peut revenir de son cache : on débloque.
+  window.addEventListener('pageshow', () => { enRoute = false; });
+})();
+</script>
+</body>
 </html>
