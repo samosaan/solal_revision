@@ -11,16 +11,18 @@ les jeux pas encore prêts apparaissent avec un cadenas.
 | Module | Dossier | Contenu |
 |---|---|---|
 | L'île aux nombres | `nombres/` | Nombres de 1 à 10 : reconnaître une quantité, compter en touchant, retrouver un chiffre entendu, remplir une boîte de dix |
-| Les sons | à venir | Entendre les sons et les syllabes, suivre la progression Taoki |
-| J'écris | à venir | Gestes d'écriture adaptés gaucher |
-| Les jours | à venir | Date, jour d'avant et d'après, saisons |
+| Les sons | `sons/` | Compter les syllabes, entendre un son dans un mot, retrouver la lettre, assembler consonne et voyelle (ordre Taoki : l, r, m, s, f, ch, v, n, j) |
+| J'écris | `ecrire/` | Tracer au doigt les gestes de base, les chiffres de 0 à 9 et les lettres a, i, o, u, é, l, avec une piste large ; conseils pour gaucher |
+| Les jours | `jours/` | Rituel « Chaque jour compte » (compteur des jours d'école, dizaines et unités), la semaine, hier et demain, les saisons |
+
+Le code partagé (voix, étoiles, déroulé des séances) est dans `commun/`.
 
 ## Principes
 
 - Séances courtes : 8 questions, soit 5 minutes environ.
 - Chaque jeu monte seul d'un palier (jusqu'à 5, puis 7, puis 10) après 5 bonnes réponses d'affilée, et redescend après 2 erreurs d'affilée.
 - En cas d'erreur, le jeu montre la bonne démarche (on recompte ensemble) plutôt que de sanctionner.
-- 1 étoile par bonne réponse au premier essai, 10 étoiles = 1 joker, comme en classe.
+- 1 étoile par bonne réponse au premier essai, 10 étoiles = 1 joker, comme en classe. Les étoiles sont communes à tous les jeux.
 - Espace parent (appui long sur le bouton en bas à droite) : réussite par nombre et par jeu. Les données restent sur la tablette.
 
 ## Ouvrir sur la tablette

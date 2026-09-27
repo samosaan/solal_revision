@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Les jours de Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  .date-du-jour {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--blanc); border: 3px solid var(--sable-bord);
+    border-radius: 22px; padding: 10px 20px 10px 10px;
+    font-size: clamp(22px, 4vh, 30px); font-weight: 700;
+    width: min(100%, 1020px);
+  }
+  .date-du-jour .rond { width: 58px; height: 58px; }
+  .date-du-jour small { display: block; font-size: 0.65em; font-weight: 400; color: var(--encre-douce); }
+
+  /* Train de la semaine */
+  .train { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; justify-content: center; }
+  .wagon {
+    width: clamp(82px, 11.5vw, 124px); height: clamp(90px, 20vh, 130px);
+    border-radius: 16px 16px 10px 10px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: clamp(15px, 2.4vh, 20px); font-weight: 700; color: var(--blanc);
+    position: relative; padding: 6px;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .wagon::before, .wagon::after {
+    content: ""; position: absolute; bottom: -12px; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--encre); border: 4px solid var(--sable);
+  }
+  .wagon::before { left: 14%; }
+  .wagon::after { right: 14%; }
+  .wagon.repere { transform: translateY(-10px) scale(1.06); box-shadow: 0 0 0 5px var(--encre); }
+  .wagon.allume { transform: translateY(-10px); }
+  .wagon.mystere { background: var(--blanc) !important; color: var(--encre-douce); border: 4px dashed var(--galet); font-size: 44px; }
+
+  /* Hier, aujourd'hui, demain */
+  .trois-cartes { display: flex; gap: clamp(12px, 3vw, 30px); align-items: stretch; }
+  .carte-jour {
+    width: clamp(150px, 24vw, 250px);
+    border-radius: 24px; background: var(--blanc);
+    box-shadow: 0 5px 0 var(--sable-bord);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 16px 10px 20px;
+  }
+  .carte-jour .etiquette { font-size: clamp(18px, 3vh, 24px); color: var(--encre-douce); font-weight: 700; }
+  .carte-jour .jour {
+    width: 100%; min-height: clamp(70px, 14vh, 100px);
+    border-radius: 16px; display: grid; place-items: center;
+    font-size: clamp(24px, 4.5vh, 36px); font-weight: 700; color: var(--blanc);
+  }
+  .carte-jour .jour.vide { background: var(--lagon); }
+  .carte-jour .jour.mystere { background: var(--blanc); border: 4px dashed var(--galet); color: var(--encre-douce); font-size: 48px; }
+  .carte-jour.centre { box-shadow: 0 0 0 5px var(--encre), 0 5px 0 var(--sable-bord); }
+
+  .rep.jour-btn { color: var(--blanc); border: 0; font-size: clamp(26px, 5vh, 40px); min-width: clamp(150px, 22vw, 230px); }
+  .rep.jour-btn.juste { box-shadow: 0 0 0 6px var(--algue), 0 7px 0 var(--algue-fonce); }
+  .rep.jour-btn.faux { opacity: .45; }
+  .rep.saison-btn { flex-direction: column; gap: 4px; font-size: clamp(20px, 3.4vh, 28px); min-width: clamp(130px, 19vw, 190px); height: clamp(100px, 20vh, 150px); }
+  .rep.saison-btn span { font-size: clamp(40px, 8vh, 64px); line-height: 1; }
+
+  .image-saison { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .grand-emoji { font-size: clamp(110px, 30vh, 210px); line-height: 1; }
+
+  /* Chaque jour compte */
+  .compte { display: flex; align-items: center; gap: clamp(20px, 5vw, 60px); flex-wrap: wrap; justify-content: center; }
+  .compte-nombre { text-align: center; }
+  .compte-nombre .n { font-size: clamp(100px, 26vh, 200px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .compte-nombre .t { font-size: clamp(18px, 3vh, 24px); color: var(--encre-douce); font-weight: 700; }
+  .blocs { display: flex; align-items: flex-end; gap: 22px; }
+  .colonne { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .colonne .titre-col { font-size: 16px; font-weight: 700; color: var(--encre-douce); letter-spacing: .06em; text-transform: uppercase; }
+  .colonne .contenu { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; max-width: 46vw; justify-content: center; }
+  .centaine {
+    width: clamp(70px, 14vh, 100px); height: clamp(70px, 14vh, 100px);
+    background: repeating-linear-gradient(0deg, transparent 0 9%, rgba(255,255,255,.5) 9% 10%), repeating-linear-gradient(90deg, transparent 0 9%, rgba(255,255,255,.5) 9% 10%), var(--encre);
+    border-radius: 6px;
+  }
+  .dizaine {
+    width: clamp(22px, 4vh, 30px); height: clamp(150px, 34vh, 230px);
+    background: repeating-linear-gradient(180deg, var(--mer) 0 9%, var(--blanc) 9% 10%);
+    border-radius: 6px; border: 3px solid var(--mer-fonce);
+  }
+  .unite {
+    width: clamp(34px, 6.5vh, 48px); height: clamp(34px, 6.5vh, 48px);
+    background: var(--corail); border: 3px solid var(--corail-fonce); border-radius: 8px;
+  }
+  .compte button { transition: transform .15s ease, opacity .2s ease, filter .2s ease; }
+  .compte button.touche { filter: saturate(.3) brightness(1.1); transform: scale(.94); }
+  .compte button:disabled { opacity: .45; }
+  .pas-ecole { font-size: clamp(22px, 4vh, 30px); color: var(--encre-douce); font-weight: 700; text-align: center; max-width: 30ch; }
+
+  .reglage { display: flex; align-items: center; gap: 14px; font-size: 22px; font-weight: 700; }
+  .reglage button { width: 56px; height: 56px; border-radius: 50%; background: var(--blanc); border: 3px solid var(--galet); font-size: 28px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="ecran accueil">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">Les jours <small>La semaine, hier et demain, les saisons</small></h1>
+    </div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="date-du-jour">
+    <button class="rond ecoute" id="btn-date" aria-label="Écouter la date"><svg><use href="#i-son"/></svg></button>
+    <div><span id="date-texte"></span><small id="saison-texte"></small></div>
+  </div>
+  <div class="tuiles">
+    <button class="tuile" data-jeu="compte">
+      <span class="dessin" style="font-weight:700;color:var(--mer)">🎒</span>
+      Chaque jour compte
+      <span class="niveau" data-niveau="compte"></span>
+    </button>
+    <button class="tuile" data-jeu="semaine">
+      <span class="dessin">🚂</span>
+      La semaine
+      <span class="niveau" data-niveau="semaine"></span>
+    </button>
+    <button class="tuile" data-jeu="hier">
+      <span class="dessin">📅</span>
+      Hier, demain
+      <span class="niveau" data-niveau="hier"></span>
+    </button>
+    <button class="tuile" data-jeu="saisons">
+      <span class="dessin">🍂</span>
+      Les saisons
+      <span class="niveau" data-niveau="saisons"></span>
+    </button>
+  </div>
+  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="fin" class="ecran fin" hidden>
+  <h1 class="titre">Bravo Solal !</h1>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p class="fin-texte" id="fin-texte"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Encore</button>
+    <button class="rep large gris" id="btn-accueil">Accueil</button>
+  </div>
+</section>
+
+<!-- ============ PARENT ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent · Les jours</h2>
+  </div>
+  <h3>Compteur « Chaque jour compte »</h3>
+  <p>Le compteur part du mardi 1er septembre 2026 et compte les lundis, mardis, jeudis et vendredis, sans les vacances ni les jours fériés ci-dessous (zone C, académie de Versailles). Si le nombre affiché ne correspond pas à celui de la classe, corrigez-le ici : l'écart est gardé pour la suite.</p>
+  <div class="reglage">
+    <button id="btn-moins" aria-label="Enlever un jour">−</button>
+    <span id="reglage-texte"></span>
+    <button id="btn-plus" aria-label="Ajouter un jour">+</button>
+  </div>
+  <ul id="liste-vacances"></ul>
+  <p>Les dates des vacances d'hiver et de printemps sont à vérifier sur le calendrier officiel de l'Éducation nationale. Le 100ᵉ jour tombe le <strong id="jour-100"></strong> d'après ce calendrier.</p>
+  <h3>Réussite par jeu</h3>
+  <div id="stats"></div>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte danger" id="btn-reset">Remettre les jeux à zéro</button>
+  </div>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, $$, hasard, choisir, melanger, pause, dire, enLettres, ordinal } = Solal;
+
+  const SEMAINE = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  const COULEUR = { lundi: '#E0674A', mardi: '#D9951A', mercredi: '#3E9E68', jeudi: '#2F7FA3', vendredi: '#8466B0', samedi: '#D66C98', dimanche: '#6F8394' };
+  const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const NOMS = { compte: 'Chaque jour compte', semaine: 'La semaine', hier: 'Hier, demain', saisons: 'Les saisons' };
+
+  /* ---------- Dates ---------- */
+  const auj = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+  const cleDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const jourSemaine = d => SEMAINE[(d.getDay() + 6) % 7];
+  const dateEnMots = d => `${jourSemaine(d)} ${d.getDate() === 1 ? '1er' : d.getDate()} ${MOIS[d.getMonth()]}`;
+  const dateDite = d => `${jourSemaine(d)} ${d.getDate() === 1 ? 'premier' : enLettres(d.getDate())} ${MOIS[d.getMonth()]}`;
+  function saison(d) {
+    const md = (d.getMonth() + 1) * 100 + d.getDate();
+    if (md >= 1221 || md < 320) return 'hiver';
+    if (md < 621) return 'printemps';
+    if (md < 922) return 'été';
+    return 'automne';
+  }
+  const dansSaison = s => s === 'printemps' ? 'au printemps' : `en ${s}`;
+
+  /* ---------- Jours d'école 2026-2027 (zone C) ---------- */
+  const RENTREE = new Date(2026, 8, 1);
+  const VACANCES = [
+    { nom: 'Vacances de la Toussaint', du: '2026-10-17', au: '2026-11-01' },
+    { nom: 'Vacances de Noël', du: '2026-12-19', au: '2027-01-03' },
+    { nom: "Vacances d'hiver (à vérifier)", du: '2027-02-20', au: '2027-03-07' },
+    { nom: 'Vacances de printemps (à vérifier)', du: '2027-04-17', au: '2027-05-02' }
+  ];
+  const FERIES = [
+    { nom: 'Armistice', le: '2026-11-11' },
+    { nom: 'Lundi de Pâques', le: '2027-03-29' },
+    { nom: 'Ascension', le: '2027-05-06' },
+    { nom: "Pont de l'Ascension", le: '2027-05-07' },
+    { nom: 'Lundi de Pentecôte', le: '2027-05-17' }
+  ];
+  const JOURS_CLASSE = [1, 2, 4, 5]; // lundi, mardi, jeudi, vendredi
+  function estJourEcole(d) {
+    if (d < RENTREE || !JOURS_CLASSE.includes(d.getDay())) return false;
+    const k = cleDate(d);
+    if (VACANCES.some(v => k >= v.du && k <= v.au)) return false;
+    return !FERIES.some(f => f.le === k);
+  }
+  function joursEcole(jusqua) {
+    let n = 0;
+    for (let d = new Date(RENTREE); d <= jusqua; d.setDate(d.getDate() + 1)) if (estJourEcole(d)) n++;
+    return n;
+  }
+  function centiemeJour() {
+    let n = 0;
+    for (let d = new Date(RENTREE); d.getFullYear() < 2028; d.setDate(d.getDate() + 1)) {
+      if (estJourEcole(d) && ++n === 100) return new Date(d);
+    }
+    return null;
+  }
+  let m = null;
+  const compteDuJour = () => Math.max(0, joursEcole(auj()) + ((m && m.etat.ecart) || 0));
+
+  /* ---------- Date sur l'accueil ---------- */
+  function afficherDate() {
+    const d = auj();
+    const txt = dateEnMots(d);
+    $('#date-texte').textContent = 'Aujourd\'hui : ' + txt.charAt(0).toUpperCase() + txt.slice(1);
+    $('#saison-texte').textContent = `C'est ${saison(d) === 'printemps' ? 'le printemps' : saison(d) === 'été' ? "l'été" : saison(d) === 'automne' ? "l'automne" : "l'hiver"}.`;
+  }
+  $('#btn-date').addEventListener('click', () => {
+    const d = auj();
+    dire(`Aujourd'hui, nous sommes ${dateDite(d)} deux mille ${enLettres(d.getFullYear() - 2000)}. ${$('#saison-texte').textContent}`);
+  });
+
+  /* ---------- Boutons des jours ---------- */
+  const optionsJours = (cible, proches) => {
+    const autres = melanger(SEMAINE.filter(j => j !== cible && !proches.includes(j)));
+    return melanger([cible, ...proches.filter(j => j !== cible).slice(0, 1), ...autres].slice(0, 3));
+  };
+  const choixJours = (m, options, cible, aider, bravo) => m.choix(options, {
+    cible,
+    classe: 'jour-btn',
+    style: j => `background:${COULEUR[j]};box-shadow:0 7px 0 rgba(0,0,0,.25)`,
+    dit: j => j,
+    aider,
+    bravo
+  });
+  const decaler = (j, n) => SEMAINE[(SEMAINE.indexOf(j) + n + 7) % 7];
+
+  const JEUX = {
+    compte: {
+      parSeance: 1,
+      libelle: () => `jour n° ${compteDuJour()}`,
+      preparer(m) {
+        const n = compteDuJour();
+        const ecole = estJourEcole(auj());
+        const c = Math.floor(n / 100), d = Math.floor(n % 100 / 10), u = n % 10;
+        const dejaFait = m.etat.rituel === cleDate(auj());
+        $('#scene').innerHTML = `
+          <div class="compte">
+            <div class="compte-nombre">
+              <div class="n">${n}</div>
+              <div class="t">${ecole ? "jour d'école aujourd'hui" : "jours d'école déjà faits"}</div>
+            </div>
+            <div class="blocs">
+              ${c ? `<div class="colonne"><span class="titre-col">centaine</span><div class="contenu">${'<button class="centaine" data-v="100"></button>'.repeat(c)}</div></div>` : ''}
+              <div class="colonne"><span class="titre-col">dizaines</span><div class="contenu">${'<button class="dizaine" data-v="10"></button>'.repeat(d) || '<span style="color:var(--encre-douce)">0</span>'}</div></div>
+              <div class="colonne"><span class="titre-col">unités</span><div class="contenu">${'<button class="unite" data-v="1" disabled></button>'.repeat(u) || '<span style="color:var(--encre-douce)">0</span>'}</div></div>
+            </div>
+          </div>`;
+        const grands = $$('.centaine, .dizaine');
+        const petits = $$('.unite');
+        if (!grands.length) petits.forEach(b => { b.disabled = false; });
+        let total = 0;
+        const tous = [...grands, ...petits];
+        tous.forEach(b => b.addEventListener('click', async () => {
+          if (m.occupe || b.classList.contains('touche')) return;
+          m.occupe = true;
+          b.classList.add('touche');
+          total += +b.dataset.v;
+          await dire(enLettres(total));
+          if (grands.every(g => g.classList.contains('touche'))) petits.forEach(p => { p.disabled = false; });
+          if (tous.every(x => x.classList.contains('touche'))) {
+            m.etat.rituel = cleDate(auj());
+            m.jeu.essais = 1;
+            await m.bonne(`Bravo ! ${enLettres(n)}.${dejaFait ? '' : ' Tu gagnes une étoile pour aujourd\'hui.'}`, { etoile: !dejaFait });
+            return;
+          }
+          m.occupe = false;
+        }));
+        const decomposition = [c ? (c === 1 ? 'une centaine' : `${enLettres(c)} centaines`) : '', d ? (d === 1 ? 'une dizaine' : `${enLettres(d)} dizaines`) : '', u ? (u === 1 ? 'une unité' : `${enLettres(u)} unités`) : '']
+          .filter(Boolean).join(' et ');
+        const debut = ecole
+          ? `Aujourd'hui, c'est notre ${ordinal(n)} jour d'école.`
+          : `Aujourd'hui, il n'y a pas d'école. Nous avons déjà fait ${enLettres(n)} jours d'école.`;
+        const touche = grands.length ? 'Touche les barres de dix, puis les petits cubes, pour compter.' : 'Touche les petits cubes pour compter.';
+        m.consigne(`${debut} ${enLettres(n)}, c'est ${decomposition}. ${touche}`);
+      }
+    },
+
+    semaine: {
+      paliers: 2,
+      libelle: p => p === 0 ? 'après' : 'avant et après',
+      montee: () => 'Maintenant, je vais aussi te demander le jour d\'avant !',
+      async preparer(m, p) {
+        const repere = choisir(SEMAINE);
+        const avant = p === 1 && Math.random() < 0.5;
+        const cible = decaler(repere, avant ? -1 : 1);
+        m.jeu.cle = avant ? 'avant' : 'après';
+        $('#scene').innerHTML = `<div class="train">${SEMAINE.map(j =>
+          `<div class="wagon" data-j="${j}" style="background:${COULEUR[j]}">${j}</div>`).join('')}</div>`;
+        if (m.jeu.num === 1) {
+          m.occupe = true;
+          for (const j of SEMAINE) {
+            const w = $(`.wagon[data-j="${j}"]`);
+            w.classList.add('allume');
+            await dire(j, { vitesse: 0.9 });
+            w.classList.remove('allume');
+            if ($('#jeu').hidden) { m.occupe = false; return; }
+          }
+          m.occupe = false;
+        }
+        $(`.wagon[data-j="${repere}"]`).classList.add('repere');
+        const w = $(`.wagon[data-j="${cible}"]`);
+        w.classList.add('mystere');
+        w.textContent = '?';
+        choixJours(m, optionsJours(cible, [decaler(repere, avant ? 1 : -1)]), cible,
+          async () => { await dire(avant ? `Avant ${repere}, il y a ${cible}.` : `Après ${repere}, il y a ${cible}.`); },
+          () => `${choisir(Solal.BRAVOS)} ${avant ? `Avant ${repere}, c'est ${cible}.` : `Après ${repere}, c'est ${cible}.`}`);
+        m.consigne(avant ? `Quel jour vient avant ${repere} ?` : `Quel jour vient après ${repere} ?`);
+      }
+    },
+
+    hier: {
+      paliers: 1,
+      preparer(m) {
+        const vrai = auj();
+        const num = m.jeu.num;
+        let centre, question;
+        if (num <= 3) {
+          centre = jourSemaine(vrai);
+          question = ['aujourdhui', 'hier', 'demain'][num - 1];
+        } else {
+          centre = choisir(SEMAINE);
+          question = choisir(['hier', 'demain']);
+        }
+        const valeurs = { hier: decaler(centre, -1), aujourdhui: centre, demain: decaler(centre, 1) };
+        const cible = valeurs[question];
+        m.jeu.cle = question === 'aujourdhui' ? "aujourd'hui" : question;
+        const carte = (cle, etiquette) => {
+          const j = valeurs[cle];
+          const montre = question === 'aujourdhui' ? false : (cle === 'aujourdhui');
+          const contenu = cle === question ? '<div class="jour mystere">?</div>'
+            : montre ? `<div class="jour" style="background:${COULEUR[j]}">${j}</div>` : '<div class="jour vide"></div>';
+          return `<div class="carte-jour ${cle === 'aujourdhui' ? 'centre' : ''}"><span class="etiquette">${etiquette}</span>${contenu}</div>`;
+        };
+        $('#scene').innerHTML = `<div class="trois-cartes">${carte('hier', 'hier')}${carte('aujourdhui', "aujourd'hui")}${carte('demain', 'demain')}</div>`;
+        const vraiJour = num <= 3;
+        let texte;
+        if (question === 'aujourdhui') texte = "Aujourd'hui, c'est quel jour ?";
+        else if (vraiJour) texte = question === 'hier' ? `Aujourd'hui, c'est ${centre}. Hier, c'était quel jour ?` : `Aujourd'hui, c'est ${centre}. Demain, ce sera quel jour ?`;
+        else texte = question === 'hier' ? `Si aujourd'hui c'est ${centre}, hier c'était quel jour ?` : `Si aujourd'hui c'est ${centre}, demain ce sera quel jour ?`;
+        const phrase = question === 'aujourdhui' ? `Aujourd'hui, nous sommes ${dateDite(vrai)}.`
+          : question === 'hier' ? `Si aujourd'hui c'est ${centre}, hier c'était ${cible}.` : `Si aujourd'hui c'est ${centre}, demain ce sera ${cible}.`;
+        const proches = question === 'aujourdhui' ? [valeurs.demain] : [question === 'hier' ? valeurs.demain : valeurs.hier];
+        choixJours(m, optionsJours(cible, proches), cible,
+          async () => { await dire(phrase); },
+          () => `${choisir(Solal.BRAVOS)} ${phrase}`);
+        m.consigne(texte);
+      }
+    },
+
+    saisons: {
+      paliers: 1,
+      preparer(m) {
+        const ITEMS = [
+          { e: '⛄', s: 'hiver', q: 'En quelle saison fait-on un bonhomme de neige ?' },
+          { e: '🧣', s: 'hiver', q: 'En quelle saison met-on une grosse écharpe ?' },
+          { e: '🎿', s: 'hiver', q: 'En quelle saison fait-on du ski ?' },
+          { e: '🎄', s: 'hiver', q: 'En quelle saison fête-t-on Noël ?' },
+          { e: '🌷', s: 'printemps', q: 'En quelle saison les tulipes sortent-elles de terre ?' },
+          { e: '🐣', s: 'printemps', q: 'En quelle saison naissent les petits poussins ?' },
+          { e: '🌸', s: 'printemps', q: 'En quelle saison les arbres sont-ils en fleurs ?' },
+          { e: '🥚', s: 'printemps', q: 'En quelle saison cherche-t-on les œufs de Pâques ?' },
+          { e: '🏖️', s: 'été', q: 'En quelle saison va-t-on se baigner à la plage ?' },
+          { e: '🍉', s: 'été', q: 'En quelle saison mange-t-on de la pastèque ?' },
+          { e: '🌻', s: 'été', q: 'En quelle saison les tournesols sont-ils grands ?' },
+          { e: '🩴', s: 'été', q: 'En quelle saison met-on des tongs ?' },
+          { e: '🍂', s: 'automne', q: 'En quelle saison les feuilles tombent-elles des arbres ?' },
+          { e: '🍄', s: 'automne', q: 'En quelle saison ramasse-t-on les champignons ?' },
+          { e: '🌰', s: 'automne', q: 'En quelle saison ramasse-t-on les châtaignes ?' },
+          { e: '🎃', s: 'automne', q: 'En quelle saison voit-on les grosses citrouilles ?' }
+        ];
+        const SAISONS = [
+          { s: 'printemps', e: '🌷', c: '#D66C98' },
+          { s: 'été', e: '☀️', c: '#D9951A' },
+          { s: 'automne', e: '🍂', c: '#C85D40' },
+          { s: 'hiver', e: '❄️', c: '#2F7FA3' }
+        ];
+        m.jeu.pris = m.jeu.pris || [];
+        let item;
+        do { item = choisir(ITEMS); } while (m.jeu.pris.includes(item.e));
+        m.jeu.pris.push(item.e);
+        m.jeu.cle = item.s;
+        $('#scene').innerHTML = `<div class="image-saison"><div class="grand-emoji" aria-hidden="true">${item.e}</div></div>`;
+        m.choix(SAISONS.map(x => x.s), {
+          cible: item.s,
+          classe: 'saison-btn',
+          rendu: s => { const x = SAISONS.find(y => y.s === s); return `<span>${x.e}</span>${s}`; },
+          style: s => `border-color:${SAISONS.find(y => y.s === s).c}`,
+          dit: s => s === 'printemps' ? 'le printemps' : s === 'été' ? "l'été" : s === 'automne' ? "l'automne" : "l'hiver",
+          aider: async () => { await dire(`C'est ${dansSaison(item.s)}.`); },
+          bravo: () => `${choisir(Solal.BRAVOS)} C'est ${dansSaison(item.s)}.`
+        });
+        m.consigne(item.q);
+      }
+    }
+  };
+
+  m = Solal.moteur({ cle: 'solal-jours-v1', jeux: JEUX });
+  m.libelles();
+  afficherDate();
+
+  /* ---------- Espace parent ---------- */
+  const fmt = k => { const [a, mo, j] = k.split('-').map(Number); return dateEnMots(new Date(a, mo - 1, j)); };
+  function afficherParent() {
+    const n = compteDuJour();
+    const e = m.etat.ecart || 0;
+    $('#reglage-texte').textContent = `Aujourd'hui : ${n}${e ? ` (écart ${e > 0 ? '+' : ''}${e})` : ''}`;
+    $('#liste-vacances').innerHTML = [
+      ...VACANCES.map(v => `<li>${v.nom} : du ${fmt(v.du)} au ${fmt(v.au)} inclus</li>`),
+      ...FERIES.map(f => `<li>${f.nom} : ${fmt(f.le)}</li>`)
+    ].join('');
+    const c = centiemeJour();
+    $('#jour-100').textContent = c ? `${dateEnMots(c)} ${c.getFullYear()}` : '—';
+    $('#stats').innerHTML = m.statsHTML(NOMS, { semaine: ['après', 'avant'], hier: ["aujourd'hui", 'hier', 'demain'], saisons: ['printemps', 'été', 'automne', 'hiver'] });
+    const b = $('#btn-reset');
+    b.textContent = 'Remettre les jeux à zéro';
+    b.dataset.confirme = '';
+    Solal.montrer('parent');
+  }
+  Solal.appuiLong($('#btn-parent'), afficherParent);
+  $('#btn-parent-retour').addEventListener('click', m.retour);
+  $('#btn-moins').addEventListener('click', () => { m.etat.ecart = (m.etat.ecart || 0) - 1; m.sauver(); afficherParent(); });
+  $('#btn-plus').addEventListener('click', () => { m.etat.ecart = (m.etat.ecart || 0) + 1; m.sauver(); afficherParent(); });
+  $('#btn-reset').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = 'Confirmer : tout effacer'; return; }
+    m.effacer();
+    afficherParent();
+  });
+})();
+</script>
+</body>
+</html>

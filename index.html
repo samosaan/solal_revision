@@ -203,8 +203,7 @@
       Les nombres
     </a>
 
-    <a class="jeu sons ferme" href="#" data-nom="Les sons" data-ferme="1">
-      <span class="cadenas"><svg><use href="#i-cadenas"/></svg></span>
+    <a class="jeu sons" href="sons/" data-nom="Les sons">
       <span class="dessin">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <text x="38" y="70" font-family="Andika, Comic Sans MS, sans-serif" font-size="62" font-weight="700" fill="#EE7B5B" text-anchor="middle">a</text>
@@ -214,8 +213,7 @@
       Les sons
     </a>
 
-    <a class="jeu ecrire ferme" href="#" data-nom="J'écris" data-ferme="1">
-      <span class="cadenas"><svg><use href="#i-cadenas"/></svg></span>
+    <a class="jeu ecrire" href="ecrire/" data-nom="J'écris">
       <span class="dessin">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <path d="M14 72c10-22 18-22 22 0s12 22 22 0 14-22 24 0" fill="none" stroke="#3E9E68" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 9"/>
@@ -228,8 +226,7 @@
       J'écris
     </a>
 
-    <a class="jeu jours ferme" href="#" data-nom="Les jours" data-ferme="1">
-      <span class="cadenas"><svg><use href="#i-cadenas"/></svg></span>
+    <a class="jeu jours" href="jours/" data-nom="Les jours">
       <span class="dessin">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <rect x="16" y="22" width="68" height="62" rx="10" fill="#FFFDF8" stroke="#1E3553" stroke-width="4"/>
@@ -247,11 +244,11 @@
 
 <script>
 (() => {
-  // Étoiles et jokers : lus depuis le jeu des nombres (même tablette, même site).
+  // Étoiles et jokers communs à tous les jeux (même tablette, même site).
   try {
-    const n = JSON.parse(localStorage.getItem('solal-nombres-v1') || '{}');
-    document.getElementById('etoiles').textContent = n.etoiles || 0;
-    document.getElementById('jokers').textContent = n.jokers || 0;
+    const t = JSON.parse(localStorage.getItem('solal-tresor-v1') || localStorage.getItem('solal-nombres-v1') || '{}');
+    document.getElementById('etoiles').textContent = t.etoiles || 0;
+    document.getElementById('jokers').textContent = t.jokers || 0;
   } catch (e) {}
 
   let voix = null;
@@ -281,7 +278,7 @@
   }
 
   document.getElementById('btn-ecouter').addEventListener('click', () => {
-    dire('Bonjour Solal ! Choisis un jeu. Les jeux avec un cadenas arrivent bientôt.');
+    dire('Bonjour Solal ! Choisis un jeu.');
   });
 
   let enRoute = false;

@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>J'écris avec Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  #jeu .reponses { min-height: 84px; }
+  #jeu .scene { gap: clamp(16px, 4vw, 48px); padding: 12px; }
+  .modele {
+    flex: none;
+    width: clamp(110px, 22vw, 220px);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--encre-douce); font-size: 18px; font-weight: 700; text-align: center;
+  }
+  .modele .grand {
+    font-size: clamp(90px, 24vh, 180px); line-height: 1; color: var(--encre);
+    font-weight: 700;
+  }
+  .modele .grand.emoji { font-size: clamp(70px, 18vh, 130px); }
+  canvas#piste {
+    touch-action: none;
+    background: var(--blanc);
+    border-radius: 24px;
+    box-shadow: 0 4px 0 var(--sable-bord);
+    max-width: 100%;
+  }
+  .btn-petit {
+    height: 64px; padding-inline: 22px;
+    border-radius: 20px; background: var(--blanc);
+    border: 3px solid var(--galet); box-shadow: 0 5px 0 var(--galet);
+    font-size: 22px; font-weight: 700; color: var(--encre-douce);
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .btn-petit:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--galet); }
+  .btn-petit span { font-size: 30px; }
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="ecran accueil">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">J'écris <small>Suivre le chemin avec le doigt</small></h1>
+    </div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="tuiles trois">
+    <button class="tuile" data-jeu="traits">
+      <span class="dessin">
+        <svg viewBox="0 0 100 60" aria-hidden="true"><path d="M8 40 C 18 10, 28 10, 38 40 S 58 70, 68 40 S 88 10, 94 30" fill="none" stroke="#3E9E68" stroke-width="7" stroke-linecap="round"/></svg>
+      </span>
+      Les traits
+      <span class="niveau">ronds, vagues, boucles</span>
+    </button>
+    <button class="tuile" data-jeu="chiffres">
+      <span class="dessin" style="font-weight:700;color:var(--mer)">3</span>
+      Les chiffres
+      <span class="niveau">de 0 à 9</span>
+    </button>
+    <button class="tuile" data-jeu="lettres">
+      <span class="dessin" style="font-weight:700;color:var(--corail-fonce)">a</span>
+      Les lettres
+      <span class="niveau">a, i, o, u, é, l</span>
+    </button>
+  </div>
+  <button class="coin-parent" id="btn-parent">Conseils parents · appui long</button>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="fin" class="ecran fin" hidden>
+  <h1 class="titre">Bravo Solal !</h1>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p class="fin-texte" id="fin-texte"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Encore</button>
+    <button class="rep large gris" id="btn-accueil">Accueil</button>
+  </div>
+</section>
+
+<!-- ============ CONSEILS PARENTS ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Conseils · écrire en étant gaucher</h2>
+  </div>
+  <p>Ce jeu travaille le <strong>sens des gestes</strong> (on part du point vert, on suit le chemin) avant la taille et la précision. La piste est volontairement large, et Solal peut lever le doigt : il reprend là où il s'était arrêté.</p>
+  <h3>Pour l'écriture sur papier</h3>
+  <ul>
+    <li><strong>Feuille inclinée vers la droite</strong> (le haut de la feuille part vers la droite), posée un peu à gauche de son corps.</li>
+    <li><strong>Main sous la ligne</strong>, poignet droit : on évite la main « en crochet » au-dessus de ce qu'il écrit.</li>
+    <li><strong>Crayon tenu à 2 ou 3 cm de la pointe</strong>, pour qu'il voie ce qu'il écrit. Un crayon triangulaire ou un guide-doigt aide.</li>
+    <li><strong>Lumière venant de la droite</strong>, pour ne pas écrire dans l'ombre de sa main.</li>
+    <li>À table ou en classe, <strong>à gauche d'un droitier</strong>, pour que les coudes ne se cognent pas. Des ciseaux pour gaucher existent.</li>
+  </ul>
+  <h3>Avec une suspicion de dyspraxie</h3>
+  <ul>
+    <li>Tracer <strong>en grand d'abord</strong> (au doigt, sur une ardoise, dans le sable ou la farine), puis de plus en plus petit.</li>
+    <li>Des séances <strong>courtes</strong> (5 minutes), en félicitant l'effort plutôt que le résultat.</li>
+    <li>Un bilan chez un <strong>ergothérapeute</strong> ou un <strong>psychomotricien</strong> dira ce qui aide vraiment Solal, et si l'ordinateur doit prendre le relais pour certains écrits.</li>
+  </ul>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, choisir, melanger, pause, dire } = Solal;
+
+  /* ---------- Formes, dans une boîte de 100 × 100 (y vers le bas) ---------- */
+  function arc(cx, cy, r, a0, a1, ry = r) {
+    const n = Math.max(8, Math.ceil(Math.abs(a1 - a0) / 8));
+    return Array.from({ length: n + 1 }, (_, i) => {
+      const a = (a0 + (a1 - a0) * i / n) * Math.PI / 180;
+      return [cx + r * Math.cos(a), cy + ry * Math.sin(a)];
+    });
+  }
+  function courbe(f, t0, t1, n = 90) {
+    return Array.from({ length: n + 1 }, (_, i) => f(t0 + (t1 - t0) * i / n));
+  }
+  const suite = (...morceaux) => morceaux.flat();
+
+  // Rond, zéro, o : on part du haut et on tourne vers la gauche, comme à l'école.
+  const FORMES = {
+    traits: [
+      { nom: 'le trait qui descend', icone: '⬇️', traits: [[[50, 10], [50, 90]]] },
+      { nom: 'le trait couché', icone: '➡️', traits: [[[10, 50], [90, 50]]] },
+      { nom: 'le rond', icone: '⭕', traits: [arc(50, 50, 34, 270, -90)] },
+      { nom: 'les vagues', icone: '🌊', traits: [courbe(t => [10 + 80 * t, 50 + 16 * Math.sin(t * 4 * Math.PI)], 0, 1)] },
+      { nom: 'les ponts', icone: '🌉', traits: [courbe(t => [10 + 80 * t / (3 * Math.PI), 72 - 38 * Math.abs(Math.sin(t))], 0, 3 * Math.PI)] },
+      { nom: 'les boucles', icone: '➰', traits: [courbe(s => [14 + 3.6 * s + 7 * Math.sin(s), 74 - 23 * (1 - Math.cos(s))], 0, 6 * Math.PI, 140)] },
+      { nom: 'le zigzag', icone: '⚡', traits: [[[10, 72], [23, 28], [36, 72], [49, 28], [62, 72], [75, 28], [88, 72]]] }
+    ],
+    chiffres: [
+      { nom: 'le zéro', modele: '0', traits: [arc(50, 50, 24, 270, -90, 36)] },
+      { nom: 'le un', modele: '1', traits: [[[34, 32], [54, 12], [54, 88]]] },
+      { nom: 'le deux', modele: '2', traits: [suite(arc(50, 34, 20, 200, 390), [[28, 86], [74, 86]])] },
+      { nom: 'le trois', modele: '3', traits: [suite(arc(48, 31, 17, 210, 450), arc(48, 67, 19, 270, 510))] },
+      { nom: 'le quatre', modele: '4', traits: [[[58, 12], [26, 62], [76, 62]], [[60, 38], [60, 90]]] },
+      { nom: 'le cinq', modele: '5', traits: [suite([[70, 14], [37, 14], [35, 45]], arc(50, 64, 21, 235, 500))] },
+      { nom: 'le six', modele: '6', traits: [suite(arc(72, 62, 44, 262, 180), arc(50, 62, 22, 180, -180))] },
+      { nom: 'le sept', modele: '7', traits: [[[28, 16], [72, 16], [42, 88]]] },
+      { nom: 'le huit', modele: '8', traits: [courbe(t => [50 - 18 * Math.sin(2 * t), 50 - 36 * Math.cos(t)], 0, 2 * Math.PI, 120)] },
+      { nom: 'le neuf', modele: '9', traits: [suite(arc(50, 32, 18, 0, -360), [[68, 32], [66, 88]])] }
+    ],
+    lettres: [
+      { nom: 'la lettre a', modele: 'a', traits: [arc(46, 60, 20, -20, -380), [[66, 40], [66, 82]]] },
+      { nom: 'la lettre o', modele: 'o', traits: [arc(50, 60, 22, 270, -90)] },
+      { nom: 'la lettre i', modele: 'i', traits: [[[50, 44], [50, 84]], [[50, 24]]] },
+      { nom: 'la lettre u', modele: 'u', traits: [suite([[36, 42], [36, 68]], arc(48, 68, 12, 180, 0), [[60, 68], [60, 42], [60, 84]])] },
+      { nom: 'la lettre l', modele: 'l', traits: [[[50, 10], [50, 88]]] },
+      { nom: 'la lettre é', modele: 'é', traits: [suite([[30, 62], [70, 62]], arc(50, 62, 20, 0, -320)), [[58, 24], [46, 36]]] }
+    ]
+  };
+
+  /* ---------- Piste de traçage ---------- */
+  const TOL = 12;     // distance acceptée autour du chemin, sur 100
+  const PAS = 5;      // écart entre deux points de passage
+
+  function reechantillonner(pts, pas) {
+    if (pts.length === 1) return [pts[0]];
+    const res = [pts[0]];
+    let reste = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      const d = Math.hypot(x1 - x0, y1 - y0);
+      let t = pas - reste;
+      while (t <= d) {
+        res.push([x0 + (x1 - x0) * t / d, y0 + (y1 - y0) * t / d]);
+        t += pas;
+      }
+      reste = d - (t - pas);
+    }
+    const der = pts[pts.length - 1], dp = res[res.length - 1];
+    if (Math.hypot(der[0] - dp[0], der[1] - dp[1]) > 1) res.push(der);
+    return res;
+  }
+
+  let piste = null;
+
+  function preparerPiste(m, forme) {
+    const scene = $('#scene');
+    const modele = forme.modele
+      ? `<div class="grand">${forme.modele}</div>`
+      : `<div class="grand emoji">${forme.icone}</div>`;
+    scene.innerHTML = `<div class="modele">${modele}<span>${forme.nom}</span></div><canvas id="piste"></canvas>`;
+    $('#reponses').innerHTML = `<button class="btn-petit" id="btn-recommencer"><span>↺</span>Recommencer</button>`;
+
+    piste = {
+      forme,
+      points: forme.traits.map(t => reechantillonner(t, PAS)),
+      trait: 0,
+      cp: 0,
+      encre: [],
+      enCours: null,
+      fini: false
+    };
+
+    const canvas = $('#piste');
+    const ctx = canvas.getContext('2d');
+    let k = 1;
+
+    function dimensionner() {
+      const r = scene.getBoundingClientRect();
+      const larg = r.width - $('.modele').getBoundingClientRect().width - 70;
+      const s = Math.max(200, Math.min(r.height - 28, larg));
+      const dpr = window.devicePixelRatio || 1;
+      canvas.style.width = s + 'px';
+      canvas.style.height = s + 'px';
+      canvas.width = s * dpr;
+      canvas.height = s * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      k = s / 100;
+      dessiner();
+    }
+
+    function chemin(pts) {
+      ctx.beginPath();
+      pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)));
+    }
+
+    function dessiner() {
+      const s = canvas.width / (window.devicePixelRatio || 1);
+      ctx.clearRect(0, 0, s, s);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      piste.points.forEach((pts, i) => {
+        const fait = i < piste.trait;
+        if (pts.length === 1) {
+          ctx.beginPath();
+          ctx.arc(pts[0][0] * k, pts[0][1] * k, TOL * 0.7 * k, 0, 2 * Math.PI);
+          ctx.fillStyle = fait ? '#BFE3CC' : '#F3E6C8';
+          ctx.fill();
+          return;
+        }
+        chemin(pts);
+        ctx.strokeStyle = fait ? '#BFE3CC' : '#F3E6C8';
+        ctx.lineWidth = TOL * 1.5 * k;
+        ctx.setLineDash([]);
+        ctx.stroke();
+        if (i === piste.trait && piste.cp > 1) {
+          chemin(pts.slice(0, piste.cp));
+          ctx.strokeStyle = '#BFE3CC';
+          ctx.stroke();
+        }
+        if (!fait) {
+          chemin(pts);
+          ctx.strokeStyle = '#B9C3CC';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([2, 10]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+
+      // Ce que Solal a tracé
+      ctx.strokeStyle = '#2F7FA3';
+      ctx.lineWidth = 2.6 * k;
+      piste.encre.forEach(seg => { if (seg.length > 1) { chemin(seg); ctx.stroke(); } });
+
+      if (piste.fini) return;
+      const pts = piste.points[piste.trait];
+      // Point de départ (vert) et flèche de direction, puis prochain point à atteindre (orange).
+      if (piste.cp === 0) {
+        const [x0, y0] = pts[0];
+        if (pts.length > 2) {
+          const [x1, y1] = pts[Math.min(2, pts.length - 1)];
+          const a = Math.atan2(y1 - y0, x1 - x0);
+          const L = 13 * k;
+          const bx = x0 * k + Math.cos(a) * L, by = y0 * k + Math.sin(a) * L;
+          ctx.beginPath();
+          ctx.moveTo(bx + Math.cos(a) * 4 * k, by + Math.sin(a) * 4 * k);
+          ctx.lineTo(bx + Math.cos(a + 2.4) * 3.5 * k, by + Math.sin(a + 2.4) * 3.5 * k);
+          ctx.lineTo(bx + Math.cos(a - 2.4) * 3.5 * k, by + Math.sin(a - 2.4) * 3.5 * k);
+          ctx.closePath();
+          ctx.fillStyle = '#2D7A4F';
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.arc(x0 * k, y0 * k, 6 * k, 0, 2 * Math.PI);
+        ctx.fillStyle = '#3E9E68';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#FFFDF8';
+        ctx.stroke();
+      } else if (piste.cp < pts.length) {
+        const [x, y] = pts[piste.cp];
+        ctx.beginPath();
+        ctx.arc(x * k, y * k, 3.5 * k, 0, 2 * Math.PI);
+        ctx.fillStyle = '#F2B544';
+        ctx.fill();
+      }
+    }
+
+    function coords(e) {
+      const r = canvas.getBoundingClientRect();
+      return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
+    }
+
+    async function avancer(p) {
+      if (piste.fini) return;
+      const pts = piste.points[piste.trait];
+      let meilleur = -1;
+      for (let i = piste.cp; i < Math.min(piste.cp + 4, pts.length); i++) {
+        if (Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]) < TOL) meilleur = i;
+      }
+      if (meilleur >= 0) piste.cp = meilleur + 1;
+      if (piste.cp >= pts.length) {
+        piste.trait++;
+        piste.cp = 0;
+        if (piste.trait >= piste.points.length) {
+          piste.fini = true;
+          dessiner();
+          m.occupe = true;
+          m.jeu.essais = 1;
+          await pause(250);
+          await m.bonne(`${choisir(Solal.BRAVOS)} Tu as tracé ${forme.nom}.`);
+          return;
+        }
+        dessiner();
+        dire(piste.points.length > 2 ? 'Bien ! Encore un morceau.' : 'Bien ! Maintenant, le deuxième morceau.');
+      }
+    }
+
+    canvas.addEventListener('pointerdown', e => {
+      if (piste.fini) return;
+      canvas.setPointerCapture(e.pointerId);
+      const p = coords(e);
+      piste.enCours = [p];
+      piste.encre.push(piste.enCours);
+      avancer(p);
+      dessiner();
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!piste.enCours || piste.fini) return;
+      const p = coords(e);
+      piste.enCours.push(p);
+      avancer(p);
+      dessiner();
+    });
+    const lever = () => { piste.enCours = null; };
+    canvas.addEventListener('pointerup', lever);
+    canvas.addEventListener('pointercancel', lever);
+
+    $('#btn-recommencer').addEventListener('click', () => {
+      if (piste.fini) return;
+      piste.trait = 0;
+      piste.cp = 0;
+      piste.encre = [];
+      dessiner();
+    });
+
+    piste.redimensionner = dimensionner;
+    requestAnimationFrame(dimensionner);
+  }
+  window.addEventListener('resize', () => { if (piste && !$('#jeu').hidden) piste.redimensionner(); });
+
+  /* ---------- Séances : 6 formes tirées dans la famille choisie ---------- */
+  const tirages = {};
+  function formeSuivante(famille) {
+    if (!tirages[famille] || !tirages[famille].length) tirages[famille] = melanger([...FORMES[famille]]);
+    return tirages[famille].pop();
+  }
+  const jeu = famille => ({
+    parSeance: 6,
+    preparer(m) {
+      const forme = formeSuivante(famille);
+      preparerPiste(m, forme);
+      const debut = m.jeu.num === 1 ? ' Suis le chemin jusqu\'au bout, sans te presser.' : '';
+      m.consigne(`Trace ${forme.nom}. Pose ton doigt sur le point vert.${debut}`);
+    }
+  });
+
+  const m = Solal.moteur({ cle: 'solal-ecrire-v1', jeux: { traits: jeu('traits'), chiffres: jeu('chiffres'), lettres: jeu('lettres') } });
+
+  Solal.appuiLong($('#btn-parent'), () => Solal.montrer('parent'));
+  $('#btn-parent-retour').addEventListener('click', m.retour);
+})();
+</script>
+</body>
+</html>

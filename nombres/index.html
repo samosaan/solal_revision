@@ -438,7 +438,7 @@
     <span><i style="background:var(--blanc)"></i>pas encore vu</span>
   </div>
   <div class="table-zone"><table id="table-stats"></table></div>
-  <p>Chaque jeu monte seul d'un palier (jusqu'à 5, puis 7, puis 10) après 5 bonnes réponses d'affilée, et redescend après 2 erreurs d'affilée. Une séance dure 8 questions, soit 5 minutes environ. 10 étoiles donnent 1 joker, comme en classe : à vous de décider ce qu'il permet.</p>
+  <p>Chaque jeu monte seul d'un palier (jusqu'à 5, puis 7, puis 10) après 5 bonnes réponses d'affilée, et redescend après 2 erreurs d'affilée. Une séance dure 8 questions, soit 5 minutes environ. 10 étoiles donnent 1 joker, comme en classe : à vous de décider ce qu'il permet. Les étoiles sont communes à tous les jeux et ne sont pas effacées par la remise à zéro.</p>
   <div class="actions" style="justify-content:flex-start">
     <button class="btn-texte danger" id="btn-reset">Tout remettre à zéro</button>
   </div>
@@ -511,9 +511,17 @@
     $$('.ecran').forEach(s => { s.hidden = s.id !== id; });
     majCompteurs();
   }
+  /* Étoiles et jokers communs à tous les jeux. */
+  const CLE_TRESOR = 'solal-tresor-v1';
+  function lireTresor() {
+    try { const b = localStorage.getItem(CLE_TRESOR); if (b) return JSON.parse(b); } catch (e) {}
+    return { etoiles: etat.etoiles || 0, jokers: etat.jokers || 0 };
+  }
+  function sauverTresor(t) { try { localStorage.setItem(CLE_TRESOR, JSON.stringify(t)); } catch (e) {} }
   function majCompteurs() {
-    $$('.js-etoiles').forEach(el => { el.textContent = etat.etoiles; });
-    $$('.js-jokers').forEach(el => { el.textContent = etat.jokers; });
+    const t = lireTresor();
+    $$('.js-etoiles').forEach(el => { el.textContent = t.etoiles; });
+    $$('.js-jokers').forEach(el => { el.textContent = t.jokers; });
     $$('[data-niveau]').forEach(el => { el.textContent = `jusqu'à ${PALIERS[etat.paliers[el.dataset.niveau]]}`; });
   }
 
@@ -576,9 +584,11 @@
 
   async function gagnerEtoile() {
     jeu.gagnees++;
-    etat.etoiles++;
+    const t = lireTresor();
+    t.etoiles++;
     let joker = false;
-    if (etat.etoiles >= 10) { etat.etoiles = 0; etat.jokers++; joker = true; }
+    if (t.etoiles >= 10) { t.etoiles = 0; t.jokers++; joker = true; }
+    sauverTresor(t);
     majCompteurs();
     return joker;
   }

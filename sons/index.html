@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Les sons de Solal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
+<link rel="stylesheet" href="../commun/commun.css">
+<style>
+  .image-mot { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .grand-emoji { font-size: clamp(100px, 26vh, 190px); line-height: 1; }
+  .mot-ecrit { font-size: clamp(30px, 6vh, 46px); font-weight: 700; color: var(--encre-douce); letter-spacing: 0.04em; }
+  .syllabes { display: flex; gap: 14px; min-height: 40px; }
+  .syllabes i {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--blanc); border: 3px solid var(--galet);
+    transition: background .2s ease, transform .2s ease;
+  }
+  .syllabes i.allume { background: var(--or); border-color: var(--or-fonce); transform: scale(1.2); }
+  .btn-morceaux {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 18px; border-radius: 24px;
+    background: var(--blanc); border: 3px solid var(--sable-bord);
+    box-shadow: 0 5px 0 var(--sable-bord);
+    font-size: 18px; font-weight: 700; color: var(--encre-douce);
+  }
+  .btn-morceaux span { font-size: 56px; line-height: 1; }
+  .btn-morceaux:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--sable-bord); }
+  .rep .points { font-size: clamp(30px, 6vh, 46px); letter-spacing: 6px; color: var(--mer); }
+  .rep.juste .points, .rep.faux .points { color: inherit; }
+  .rep.lettre { font-size: clamp(64px, 13vh, 110px); min-width: clamp(110px, 18vw, 180px); }
+  .rep.voyelle { font-size: clamp(56px, 11vh, 96px); min-width: clamp(84px, 13vw, 140px); }
+  .rep .mini { font-size: 0.45em; }
+  .oreille {
+    width: clamp(150px, 32vh, 240px); height: clamp(150px, 32vh, 240px);
+    border-radius: 50%; background: var(--mer); color: var(--blanc);
+    display: grid; place-items: center; box-shadow: 0 8px 0 var(--mer-fonce);
+  }
+  .oreille svg { width: 50%; height: 50%; }
+  .fusion { display: flex; align-items: center; gap: 22px; }
+  .carreau {
+    width: clamp(120px, 26vh, 190px); height: clamp(120px, 26vh, 190px);
+    border-radius: 28px; display: grid; place-items: center;
+    font-size: clamp(80px, 18vh, 140px); font-weight: 700; line-height: 1;
+    background: var(--blanc); box-shadow: 0 6px 0 var(--sable-bord);
+    transition: transform .35s ease;
+  }
+  .carreau.consonne { color: var(--corail-fonce); }
+  .carreau.voyelle-choisie { color: var(--mer); }
+  .carreau.vide { color: var(--galet); border: 4px dashed var(--galet); box-shadow: none; background: transparent; }
+  .plus { font-size: 60px; color: var(--encre-douce); font-weight: 700; transition: opacity .3s ease, width .3s ease; }
+  .fusion.collee .plus { opacity: 0; width: 0; overflow: hidden; }
+  .fusion.collee { gap: 0; }
+  .fusion.collee .carreau.consonne { border-radius: 28px 0 0 28px; }
+  .fusion.collee .carreau.voyelle-choisie { border-radius: 0 28px 28px 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ ACCUEIL ============ -->
+<section id="accueil" class="ecran accueil">
+  <div class="accueil-haut">
+    <div class="accueil-gauche">
+      <a class="rond" href="../" aria-label="Retour à tous les jeux"><svg><use href="#i-maison"/></svg></a>
+      <h1 class="titre">Les sons <small>Écouter, reconnaître, assembler</small></h1>
+    </div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="tuiles">
+    <button class="tuile" data-jeu="syllabes">
+      <span class="dessin">👏</span>
+      Les syllabes
+      <span class="niveau" data-niveau="syllabes"></span>
+    </button>
+    <button class="tuile" data-jeu="entends">
+      <span class="dessin">👂</span>
+      J'entends
+      <span class="niveau" data-niveau="entends"></span>
+    </button>
+    <button class="tuile" data-jeu="lettre">
+      <span class="dessin" style="font-weight:700;color:var(--corail-fonce)">a</span>
+      La lettre
+      <span class="niveau" data-niveau="lettre"></span>
+    </button>
+    <button class="tuile" data-jeu="assemble">
+      <span class="dessin" style="font-size:48px;font-weight:700"><span><span style="color:var(--corail-fonce)">l</span><span style="color:var(--mer)">a</span></span></span>
+      J'assemble
+      <span class="niveau" data-niveau="assemble"></span>
+    </button>
+  </div>
+  <button class="coin-parent" id="btn-parent">Espace parent · appui long</button>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="jeu" class="ecran" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-maison" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <button class="rond ecoute" id="btn-reecouter" aria-label="Réécouter la consigne"><svg><use href="#i-son"/></svg></button>
+    <div class="progres" id="progres"></div>
+    <div class="compteur">
+      <span class="bloc"><svg class="etoile-svg"><use href="#i-etoile"/></svg><span class="js-etoiles">0</span>/10</span>
+      <span class="bloc"><span class="joker">J</span><span class="js-jokers">0</span></span>
+    </div>
+  </div>
+  <div class="scene" id="scene"></div>
+  <div class="reponses" id="reponses"></div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="fin" class="ecran fin" hidden>
+  <h1 class="titre">Bravo Solal !</h1>
+  <div class="rangee-etoiles" id="fin-etoiles"></div>
+  <p class="fin-texte" id="fin-texte"></p>
+  <div class="actions">
+    <button class="rep large" id="btn-encore">Encore</button>
+    <button class="rep large gris" id="btn-accueil">Accueil</button>
+  </div>
+</section>
+
+<!-- ============ PARENT ============ -->
+<section id="parent" class="ecran parent" hidden>
+  <div class="barre">
+    <button class="rond" id="btn-parent-retour" aria-label="Retour"><svg><use href="#i-maison"/></svg></button>
+    <h2>Espace parent · Les sons</h2>
+  </div>
+  <p>Réussite au premier essai, élément par élément. Les voyelles et syllabes suivent l'ordre de Taoki et de Capitaine Solal (a, é, i, o, u, puis l, r, m, s, f, ch, v, n, j).</p>
+  <ul>
+    <li><strong>Les syllabes</strong> : compter les morceaux d'un mot à l'oral. C'est la base de tout le reste.</li>
+    <li><strong>J'entends</strong> : repérer un son dans un mot, sans rien lire.</li>
+    <li><strong>La lettre</strong> : relier un son entendu à la lettre écrite.</li>
+    <li><strong>J'assemble</strong> : la fusion. La consonne n'est jamais prononcée seule (une voix de synthèse la déformerait) : Solal voit « l » et « a » se coller et entend « la ».</li>
+  </ul>
+  <div class="legende">
+    <span><i style="background:#CDEBD8"></i>80 % et plus</span>
+    <span><i style="background:#FBE3BE"></i>50 à 79 %</span>
+    <span><i style="background:#F6D0C6"></i>moins de 50 %</span>
+  </div>
+  <div id="stats"></div>
+  <p>Chaque jeu monte d'un palier après 5 bonnes réponses d'affilée et redescend après 2 erreurs d'affilée. Les étoiles sont communes à tous les jeux.</p>
+  <div class="actions" style="justify-content:flex-start">
+    <button class="btn-texte danger" id="btn-reset">Remettre les sons à zéro</button>
+  </div>
+</section>
+
+<script src="../commun/commun.js"></script>
+<script>
+(() => {
+  const { $, $$, hasard, choisir, melanger, pause, dire, enLettres } = Solal;
+
+  /* m : mot écrit · e : image · s : syllabes telles qu'on les fait dire à la voix · v : voyelles entendues
+     (v à null : mot ambigu, exclu de « J'entends », par exemple « poisson » où « oi » fait entendre « a »). */
+  const MOTS = [
+    { m: 'chat', e: '🐱', s: ['chat'], v: ['a'] },
+    { m: 'loup', e: '🐺', s: ['loup'], v: ['ou'] },
+    { m: 'lit', e: '🛏️', s: ['lit'], v: ['i'] },
+    { m: 'nez', e: '👃', s: ['nez'], v: ['é'] },
+    { m: 'bus', e: '🚌', s: ['bus'], v: ['u'] },
+    { m: 'clé', e: '🔑', s: ['clé'], v: ['é'] },
+    { m: 'pied', e: '🦶', s: ['pied'], v: ['é'] },
+    { m: 'lune', e: '🌙', s: ['lune'], v: ['u'] },
+    { m: 'riz', e: '🍚', s: ['riz'], v: ['i'] },
+    { m: 'jus', e: '🧃', s: ['jus'], v: ['u'] },
+    { m: 'sac', e: '👜', s: ['sac'], v: ['a'] },
+    { m: 'vache', e: '🐄', s: ['vache'], v: ['a'] },
+    { m: 'poule', e: '🐔', s: ['poule'], v: ['ou'] },
+    { m: 'pain', e: '🍞', s: ['pain'], v: [] },
+    { m: 'lapin', e: '🐰', s: ['la', 'pin'], v: ['a'] },
+    { m: 'vélo', e: '🚲', s: ['vé', 'lo'], v: ['é', 'o'] },
+    { m: 'moto', e: '🏍️', s: ['mo', 'to'], v: ['o'] },
+    { m: 'robot', e: '🤖', s: ['ro', 'bo'], v: ['o'] },
+    { m: 'lama', e: '🦙', s: ['la', 'ma'], v: ['a'] },
+    { m: 'cadeau', e: '🎁', s: ['ca', 'do'], v: ['a', 'o'] },
+    { m: 'bateau', e: '⛵', s: ['ba', 'to'], v: ['a', 'o'] },
+    { m: 'mouton', e: '🐑', s: ['mou', 'ton'], v: ['ou'] },
+    { m: 'cochon', e: '🐷', s: ['co', 'chon'], v: ['o'] },
+    { m: 'souris', e: '🐭', s: ['sou', 'ri'], v: ['ou', 'i'] },
+    { m: 'poisson', e: '🐟', s: ['pois', 'son'], v: null },
+    { m: 'bébé', e: '👶', s: ['bé', 'bé'], v: ['é'] },
+    { m: 'café', e: '☕', s: ['ca', 'fé'], v: ['a', 'é'] },
+    { m: 'lion', e: '🦁', s: ['li', 'on'], v: ['i'] },
+    { m: 'pizza', e: '🍕', s: ['pi', 'dza'], v: ['i', 'a'] },
+    { m: 'tortue', e: '🐢', s: ['tor', 'tu'], v: ['o', 'u'] },
+    { m: 'ananas', e: '🍍', s: ['a', 'na', 'nas'], v: ['a'] },
+    { m: 'chocolat', e: '🍫', s: ['cho', 'co', 'la'], v: ['o', 'a'] },
+    { m: 'kangourou', e: '🦘', s: ['kan', 'gou', 'rou'], v: ['ou'] },
+    { m: 'papillon', e: '🦋', s: ['pa', 'pi', 'yon'], v: ['a', 'i'] },
+    { m: 'crocodile', e: '🐊', s: ['cro', 'co', 'dile'], v: ['o', 'i'] },
+    { m: 'escargot', e: '🐌', s: ['ès', 'car', 'go'], v: ['a', 'o'] },
+    { m: 'koala', e: '🐨', s: ['ko', 'a', 'la'], v: ['o', 'a'] }
+  ];
+
+  const NOMS = { syllabes: 'Les syllabes', entends: "J'entends", lettre: 'La lettre', assemble: "J'assemble" };
+  const VOYELLES_ENTENDS = [['a', 'i', 'o'], ['a', 'i', 'o', 'u', 'é'], ['a', 'i', 'o', 'u', 'é', 'ou']];
+  const LETTRES = [
+    ['a', 'i', 'o'],
+    ['a', 'i', 'o', 'u', 'é', 'ou'],
+    ['la', 'li', 'lo', 'lu', 'ra', 'ri', 'ro', 'ru', 'ma', 'mi', 'mo', 'mu']
+  ];
+  const CONSONNES = ['l', 'r', 'm', 's', 'f', 'ch', 'v', 'n', 'j'];
+  const VOYELLES_FUSION = ['a', 'i', 'o', 'u', 'é'];
+
+  let dernier = null;
+  const tirer = (liste, cle = x => x) => {
+    let x, essais = 0;
+    do { x = choisir(liste); essais++; } while (liste.length > 1 && cle(x) === dernier && essais < 20);
+    dernier = cle(x);
+    return x;
+  };
+
+  /* Scène commune : l'image du mot, le mot écrit, les ronds des syllabes et le bouton « en morceaux ». */
+  function sceneMot(mot) {
+    $('#scene').innerHTML = `
+      <div class="image-mot">
+        <div class="grand-emoji" aria-hidden="true">${mot.e}</div>
+        <div class="mot-ecrit">${mot.m}</div>
+        <div class="syllabes">${mot.s.map(() => '<i></i>').join('')}</div>
+      </div>
+      <button class="btn-morceaux" id="btn-morceaux"><span>👏</span>En morceaux</button>`;
+    $('.syllabes').style.visibility = 'hidden';
+    $('#btn-morceaux').addEventListener('click', async () => {
+      if (m.occupe) return;
+      m.occupe = true;
+      await enMorceaux(mot);
+      m.occupe = false;
+    });
+  }
+  async function enMorceaux(mot) {
+    const ronds = $$('.syllabes i');
+    $('.syllabes').style.visibility = 'visible';
+    ronds.forEach(r => r.classList.remove('allume'));
+    for (let i = 0; i < mot.s.length; i++) {
+      ronds[i].classList.add('allume');
+      await dire(mot.s[i], { vitesse: 0.75 });
+      await pause(250);
+    }
+  }
+  const syll = n => n === 1 ? 'une syllabe' : `${enLettres(n)} syllabes`;
+
+  const JEUX = {
+    syllabes: {
+      paliers: 2,
+      libelle: p => p === 0 ? 'mots courts' : 'mots longs',
+      montee: () => 'Maintenant, il y a aussi des mots plus longs !',
+      preparer(m, p) {
+        const max = p === 0 ? 2 : 3;
+        const n = Math.random() < 0.5 ? max : 1 + hasard(max);
+        const mot = tirer(MOTS.filter(x => x.s.length === n), x => x.m);
+        m.jeu.cle = String(n);
+        sceneMot(mot);
+        const options = Array.from({ length: max }, (_, i) => i + 1);
+        m.choix(options, {
+          cible: n,
+          rendu: k => `<span class="points">${'●'.repeat(k)}</span>`,
+          dit: k => enLettres(k),
+          aider: async () => { await enMorceaux(mot); await dire(`Il y a ${syll(n)}.`); },
+          avantBravo: () => enMorceaux(mot),
+          bravo: () => `Bravo ! Il y a ${syll(n)}.`
+        });
+        m.consigne(`Combien de syllabes dans « ${mot.m} » ? Tape dans tes mains !`);
+      }
+    },
+
+    entends: {
+      paliers: 3,
+      libelle: p => ['a · i · o', 'a · i · o · u · é', 'a · i · o · u · é · ou'][p],
+      montee: () => 'Tu connais un nouveau son !',
+      preparer(m, p) {
+        const v = choisir(VOYELLES_ENTENDS[p]);
+        const oui = MOTS.filter(x => x.v && x.v.includes(v));
+        const non = MOTS.filter(x => x.v && !x.v.includes(v));
+        const present = Math.random() < 0.5;
+        const mot = tirer(present ? oui : non, x => x.m);
+        m.jeu.cle = v;
+        sceneMot(mot);
+        m.choix(['oui', 'non'], {
+          cible: present ? 'oui' : 'non',
+          classe: 'petit-texte',
+          rendu: r => r === 'oui' ? '✓ oui' : '✗ non',
+          style: r => r === 'oui' ? 'border-color:var(--algue);box-shadow:0 7px 0 var(--algue-fonce)' : 'border-color:var(--corail);box-shadow:0 7px 0 var(--corail-fonce)',
+          dit: r => r,
+          unCoup: true,
+          aider: async () => {
+            await enMorceaux(mot);
+            await dire(present ? `Si ! On entend « ${v} » dans « ${mot.m} ».` : `Non, on n'entend pas « ${v} » dans « ${mot.m} ».`);
+          },
+          bravo: () => present ? `Oui ! On entend « ${v} » dans « ${mot.m} ».` : `Bravo ! On n'entend pas « ${v} » dans « ${mot.m} ».`
+        });
+        m.consigne(`Est-ce que tu entends « ${v} » dans « ${mot.m} » ?`);
+      }
+    },
+
+    lettre: {
+      paliers: 3,
+      libelle: p => ['a · i · o', 'toutes les voyelles', 'syllabes l · r · m'][p],
+      montee: p => p === 2 ? 'Bravo ! Maintenant, on cherche des syllabes.' : 'Tu connais de nouvelles lettres !',
+      preparer(m, p) {
+        const pool = LETTRES[p];
+        const x = tirer(pool);
+        let autres = pool.filter(y => y !== x);
+        if (p === 2) {
+          const proches = autres.filter(y => y[0] === x[0] || y[1] === x[1]);
+          autres = proches.length >= 2 ? proches : autres;
+        }
+        const options = melanger([x, ...melanger(autres).slice(0, 2)]);
+        m.jeu.cle = x;
+        $('#scene').innerHTML = `<button class="oreille" aria-label="Réécouter"><svg><use href="#i-son"/></svg></button>`;
+        $('#scene .oreille').addEventListener('click', () => { if (!m.occupe) m.consigne(m.jeu.consigne); });
+        m.choix(options, {
+          cible: x,
+          classe: 'lettre',
+          dit: y => y,
+          aider: async y => { await dire(`Ça, c'est « ${y} ». Trouve « ${x} ».`); },
+          bravo: () => `${choisir(Solal.BRAVOS)} C'est « ${x} ».`
+        });
+        m.consigne(`Trouve « ${x} ».`);
+      }
+    },
+
+    assemble: {
+      paliers: CONSONNES.length,
+      libelle: p => `avec « ${CONSONNES[p]} »`,
+      montee: () => 'Bravo ! Tu débloques une nouvelle lettre.',
+      async preparer(m, p) {
+        const c = CONSONNES[p];
+        const cible = c + tirer(VOYELLES_FUSION);
+        m.jeu.cle = cible;
+        $('#scene').innerHTML = `
+          <div class="fusion" id="fusion">
+            <div class="carreau consonne">${c}</div>
+            <div class="plus">+</div>
+            <div class="carreau vide" id="case-v">?</div>
+          </div>`;
+        const caseV = $('#case-v');
+        const poser = v => {
+          caseV.textContent = v;
+          caseV.className = 'carreau voyelle-choisie';
+          $('#fusion').classList.add('collee');
+        };
+        const vider = () => {
+          caseV.textContent = '?';
+          caseV.className = 'carreau vide';
+          $('#fusion').classList.remove('collee');
+        };
+
+        // Au début de chaque séance, on montre la fusion avec toutes les voyelles.
+        if (m.jeu.num === 1) {
+          m.occupe = true;
+          await dire('Regarde et écoute.');
+          for (const v of VOYELLES_FUSION) {
+            poser(v);
+            await pause(300);
+            await dire(c + v, { vitesse: 0.75 });
+            await pause(500);
+            vider();
+            await pause(250);
+            if ($('#jeu').hidden) { m.occupe = false; return; }
+          }
+          m.occupe = false;
+        }
+
+        m.choix(VOYELLES_FUSION, {
+          cible: cible.slice(c.length),
+          classe: 'voyelle',
+          dit: v => { poser(v); return c + v; },
+          aider: async v => { await dire(`Ça fait « ${c + v} ». Il faut « ${cible} ».`); vider(); },
+          bravo: () => `Oui ! « ${cible} ».`
+        });
+        m.consigne(`Fais « ${cible} ». Choisis la bonne lettre.`);
+      }
+    }
+  };
+
+  const m = Solal.moteur({ cle: 'solal-sons-v1', jeux: JEUX });
+
+  /* Espace parent */
+  function afficherParent() {
+    $('#stats').innerHTML = m.statsHTML(NOMS, {
+      syllabes: ['1', '2', '3'],
+      entends: ['a', 'é', 'i', 'o', 'u', 'ou'],
+      lettre: [...LETTRES[1], ...LETTRES[2]],
+      assemble: CONSONNES.flatMap(c => VOYELLES_FUSION.map(v => c + v))
+    });
+    const b = $('#btn-reset');
+    b.textContent = 'Remettre les sons à zéro';
+    b.dataset.confirme = '';
+    Solal.montrer('parent');
+  }
+  Solal.appuiLong($('#btn-parent'), afficherParent);
+  $('#btn-parent-retour').addEventListener('click', m.retour);
+  $('#btn-reset').addEventListener('click', e => {
+    const b = e.currentTarget;
+    if (!b.dataset.confirme) { b.dataset.confirme = '1'; b.textContent = 'Confirmer : tout effacer'; return; }
+    m.effacer();
+    afficherParent();
+  });
+})();
+</script>
+</body>
+</html>
